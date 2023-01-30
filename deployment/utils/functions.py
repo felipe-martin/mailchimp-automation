@@ -3,33 +3,21 @@
 import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
-import datetime
+import pyodbc
 
 
 '-----------------------------------------2. Functions------------------------------------------------'
 
 class op_functions:
 
-    def __init__(self):
-        print("[INFO] //////////////////// MAILCHIMP AUTOMATION: SENDING ADAPTATION SURVEY 📧... ////////////////////")
-    
-    
-    def get_date():
-        #Definiendo variable con fecha de proceso
-        current_time = datetime.datetime.now()
-        Y = current_time.year
-        M = current_time.month
-        d = current_time.day
-        h = current_time.hour
-        m = current_time.minute
-        s = current_time.second
-        mailchimp_format_date = f"{Y}{M}{d}"
-        
-        return mailchimp_format_date
+    def __init__(self, mailchimp_client, sql_server_conn):
+        print("[INFO] //////////////////// MAILCHIMP AUTOMATION MODULE ACTIVE 📧... ////////////////////")
+        self.SQL_SERVER_CONN = sql_server_conn
+        self.MAILCHIMP_CLIENT = mailchimp_client
 
 
     #Funcion para obtener el listado de email para cargar en audiencia malchimp
-    def get_audience_list(self, conn):
+    def get_audience_list(self):
 
         # query para leer los registros que se deben enviar correo electronico
         query = """
@@ -42,7 +30,8 @@ class op_functions:
 
         print("[INFO] //////////////////// GETTING EDUCATIONAL RESPONSIBLE LIST TO SEND ADAPTATION SURVEY 👨‍👦... ////////////////////")
         try:
-            contacts = pd.read_sql_query(query, conn)
+            contacts = pd.read_sql_query(query, self.SQL_SERVER_CONN)
+            contacts = contacts.drop_duplicates(subset=['Email'])
             print("[INFO] //////////////////// EDUCATIONAL RESPONSIBLE LIST OK 👨‍👦... ////////////////////")
             print(contacts.head())
         except Exception as e:
@@ -55,7 +44,7 @@ class op_functions:
 
     
     #Funcion para crear audiencia segun campos solicitados
-    def audience_creation_function(self, audience_creation_dictionary, mailchimp_client):
+    def audience_creation_function(self, audience_creation_dictionary):
 
         print("[INFO] //////////////////// CREATING AUDIENCE IN MAILCHIMP 🐵... ////////////////////")
             
@@ -90,7 +79,7 @@ class op_functions:
         }
 
         try:
-            audience_creation = mailchimp_client.lists.create(data = audience_list)
+            audience_creation = self.MAILCHIMP_CLIENT.lists.create(data = audience_list)
         except Exception as e:
             print("[INFO] IT WASN'T POSSIBLE TO CREATE AUDIENCE. PLEASE CHECK LOG  🔍")    
             f = open("automatizacion_mailchimp_log.txt", "a")
@@ -101,7 +90,7 @@ class op_functions:
 
 
     #Funcion para agregar miembos a la audiencia
-    def add_members_to_audience_function(self, audience_id, mail_list, mailchimp_client):
+    def add_members_to_audience_function(self, audience_id, mail_list):
         
         print("[INFO] //////////////////// ADDING MEMBERS TO AUDIENCE IN MAILCHIMP 🙋🏻‍♀️ > 🐵... ////////////////////")
         audience_id = audience_id
@@ -111,7 +100,7 @@ class op_functions:
         #merging values before to add contacts
 
         # merge campos de la data
-        mailchimp_client.lists.merge_fields.create(list_id=audience_id, data={
+        self.MAILCHIMP_CLIENT.lists.merge_fields.create(list_id=audience_id, data={
             'tag': 'TAG',
             'name': 'TAG',
             'type': 'text',
@@ -121,7 +110,7 @@ class op_functions:
         })
 
 
-        mailchimp_client.lists.merge_fields.create(list_id=audience_id, data={
+        self.MAILCHIMP_CLIENT.lists.merge_fields.create(list_id=audience_id, data={
             'tag': 'TIPO',
             'name': 'TIPO',
             'type': 'text',
@@ -142,7 +131,7 @@ class op_functions:
                         }
                             
                     }
-                    mailchimp_client.lists.members.create(list_id=audience_id, data=data)
+                    self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
                     print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
 
                 except Exception as e:
@@ -158,7 +147,7 @@ class op_functions:
 
 
     #Funcion para crear campaña en mailchimp
-    def campaign_creation_function(self, campaign_name, audience_id, subject, from_name, reply_to, template_id, mailchimp_client):
+    def campaign_creation_function(self, campaign_name, audience_id, subject, from_name, reply_to, template_id):
 
         print("[INFO] //////////////////// CREATING CAMPAING IN MAILCHIMP 🐵... ////////////////////")
             
@@ -184,7 +173,8 @@ class op_functions:
             "type": "regular"
         }
         try:
-            new_campaign = mailchimp_client.campaigns.create(data=data)
+            new_campaign = self.MAILCHIMP_CLIENT.campaigns.create(data=data)
+            print("[INFO] //////////////////// CAMPAING CREATED SUCCESFULLY IN MAILCHIMP 🐵... ////////////////////")
         except Exception as e:
             print("[INFO] IT WASN'T POSSIBLE TO CREATE CAMPAING. PLEASE CHECK LOG  🔍")    
             f = open("automatizacion_mailchimp_log.txt", "a")
@@ -196,10 +186,10 @@ class op_functions:
 
 
     #Funcion para enviar mailing
-    def send_mail(self,campaign_id, mailchimp_client): 
+    def send_mail(self, campaign_id): 
         print("[INFO] //////////////////// SENDING CAMPAING IN MAILCHIMP 🐵... ////////////////////")    
         try:
-            mailchimp_client.campaigns.actions.send(campaign_id = campaign_id)
+            self.MAILCHIMP_CLIENT.campaigns.actions.send(campaign_id = campaign_id)
         except Exception as e:
             print("[INFO] IT WASN'T POSSIBLE TO SEND CAMPAING. PLEASE CHECK LOG  🔍")    
             f = open("automatizacion_mailchimp_log.txt", "a")

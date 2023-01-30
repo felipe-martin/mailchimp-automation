@@ -1,0 +1,27 @@
+<class 'pyodbc.Error'> returned a result with an error set
+'pyodbc.Cursor' object has no attribute 'cursor'
+'pyodbc.Cursor' object has no attribute 'cursor'
+'pyodbc.Cursor' object has no attribute 'cursor'
+'pyodbc.Cursor' object has no attribute 'cursor'
+'pyodbc.Cursor' object has no attribute 'cursor'
+{'title': 'Member Exists', 'status': 400, 'detail': '894931243@qq.com is already a list member. Use PUT to insert or update list members.', 'instance': 'f0b6ebf6-83f7-9f66-c672-450f5ce7ccd3'}
+String passed is not a valid email address
+String passed is not a valid email address
+{'title': 'Member Exists', 'status': 400, 'detail': 'frig.morales@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '27ccec7c-d3f4-5064-a92e-e2a312540d23'}
+String passed is not a valid email address
+Object of type int64 is not JSON serializable
+Index(['', 'caceresxiomara@gmail.com', 'dcarmonavalladares@gmail.com',
+       'aaolivare@yahoo.com', 'jose.cortesdi@mail.udp.cl',
+       'afarenas@gmail.com', 'frig.morales@gmail.com',
+       'caceresalejandra247@gmail.com', 'viviclock15@hotmail.com',
+       'tabaresdaniel96@gmail.com',
+       ...
+       'anavelasquez20@gmail.com', 'johanyely21@gmail.com',
+       'valeskamarquez.g@gmail.com', 'juniorjosesoturnoa@gmail.com',
+       'danielabless7@gmail.com', 'sicely_28_23@hotmail.com',
+       'marianamunoze@gmail.com', 'latorre.figueroa@gmail.com',
+       'santiagovaldiviezovega@hotmail.com',
+       'nicole.contreras.suarez@gmail.com'],
+      dtype='object', length=102)
+String passed is not a valid email address
+Object of type int64 is not JSON serializable
