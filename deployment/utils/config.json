@@ -1,0 +1,19 @@
+
+
+
+{
+    "mailchimp_credentials": 
+        {
+            "user": "vitamina.rcd@gmail.com",
+            "api-key": "064e35a5ec6d76812f4877ac3c910561-us17"
+        }
+    ,
+    "sql_server_credentials":
+        {
+            "server" : "10.10.5.49,1433",
+            "database" : "master",
+            "username" : "qv_consulta",
+            "password" : "QlikView2009"
+        }
+
+}
