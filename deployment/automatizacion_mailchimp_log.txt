@@ -25,3 +25,4 @@ Index(['', 'caceresxiomara@gmail.com', 'dcarmonavalladares@gmail.com',
       dtype='object', length=102)
 String passed is not a valid email address
 Object of type int64 is not JSON serializable
+String passed is not a valid email address
