@@ -1,0 +1,23 @@
+{
+    "mailchimp_credentials": 
+        {
+            "user": "vitamina.rcd@gmail.com",
+            "api-key": "064e35a5ec6d76812f4877ac3c910561-us17"
+        }
+    ,
+    "sql_server_credentials":
+        {
+            "server" : "10.10.5.49,1433",
+            "database" : "master",
+            "username" : "qv_consulta",
+            "password" : "QlikView2009"
+        }
+    ,
+    "dynamodb_credentials":
+        {
+            "aws_access_key_id":"AKIAQRW6JXYJBL7IYU4P",
+            "aws_secret_access_key":"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",
+            "region":"us-east-1"
+        }
+
+}
