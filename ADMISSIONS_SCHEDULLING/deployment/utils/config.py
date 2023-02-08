@@ -142,6 +142,7 @@ class Config:
         email_reply_to = str(selected_template['email_reply_to'].iloc[0])
         email_subject = str(selected_template['email_subject'].iloc[0])
         email_send_flag = str(selected_template['automation_send_email_flag'].iloc[0])
+        trigger_threshold_days = int(selected_template['trigger_threshold_days'].iloc[0])
 
 
-        return email_template, email_from_name, email_reply_to, email_subject, email_send_flag
+        return email_template, email_from_name, email_reply_to, email_subject, email_send_flag, trigger_threshold_days

@@ -21,8 +21,6 @@ ap = argparse.ArgumentParser()
 
 ap.add_argument("-c", "--campaing_email_code", required=True, type=str, 
     help='Codigo de campaña a utilizar')
-ap.add_argument("-t", "--trigger_threshold_days", required=True, type=int, 
-    help='Diferencia de dias habiles para enviar correo')
 args = ap.parse_args()
 
 #Inicializar modulo de configuracion
@@ -38,7 +36,7 @@ mailchimp_date, current_date, current_year = cfg.get_date()
 #Obteniendo configuracion de la campaña especifica
 #campaing_email_code = 'ENADAP'
 campaing_email_code = args.campaing_email_code
-email_template, email_from_name, email_reply_to, email_subject, email_send_flag = cfg.get_config_template(campaing_email_code, dynamodb_client)
+email_template, email_from_name, email_reply_to, email_subject, email_send_flag, trigger_threshold_days = cfg.get_config_template(campaing_email_code, dynamodb_client)
 email_campaign_name = f"Vitamina | Encuesta Adaptación | {str(mailchimp_date)} | Powered by Mailchimp-Automation"
 
 # diccionario para crear audiencia
@@ -68,9 +66,11 @@ if __name__ == "__main__":
     
     #Proceso generacion de audiencia, creacion de campaña y posible envio
     #tags = fn.get_tag_list() #PENDIENTE!!!!
-    threshold_days = args.trigger_threshold_days
+    threshold_days = trigger_threshold_days
     contacts = fn.get_contacts(current_date, threshold_days, campaing_email_code) #tags quitado hasta resolver
     print(f"[INFO] //////////////////// THIS EMAIL CONFIGURATION HAS {email_send_flag} SENDING SET 📧... ////////////////////")
+
+    sys.exit()
     # Continuar solo si hay mas de 1 registro en audiencia.
     if contacts.shape[0] > 1: 
         #Creacion de audiencia

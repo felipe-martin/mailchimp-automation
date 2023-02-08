@@ -79,7 +79,9 @@ class op_functions:
     def get_contacts(self, current_date, trigger_threshold_days, campaing_email_code):
         columns = [
         'child_service_id',
+        'child_vitamina_id',
         'child_name',
+        'child_educational_guardian_id',
         'child_financial_guardian_email',
         'child_educational_guardian_email',
         'child_adaptation_scheduling_dt'
@@ -101,7 +103,7 @@ class op_functions:
         educational_center_admissions['days_difference'] = [x.days for x in educational_center_admissions['days_difference']]
         educational_center_admissions['working_days_difference'] = [np.busday_count(educational_center_admissions['current_date'].iloc[x], educational_center_admissions['date'].iloc[x], holidays=self.holiday_dates) for x in range(educational_center_admissions.shape[0])] 
         educational_center_admissions['child_service_id'] = educational_center_admissions['child_service_id'].astype(int)
-        educational_center_admissions['TAG'] = [str(educational_center_admissions['child_service_id'].iloc[x]) + "-" + str(educational_center_admissions['current_date'].iloc[x]) for x in range(educational_center_admissions.shape[0])]
+        educational_center_admissions['TAG'] = [(str(educational_center_admissions['child_service_id'].iloc[x]) + str(educational_center_admissions['child_vitamina_id'].iloc[x]) + str(educational_center_admissions['child_educational_guardian_id'].iloc[x]) + str(educational_center_admissions['current_date'].iloc[x])).replace("-","") for x in range(educational_center_admissions.shape[0])]
         educational_center_admissions['TIPO'] = campaing_email_code
         educational_center_admissions['send_email_flag'] = np.where(educational_center_admissions['working_days_difference']==TRIGGER_THRESHOLD_DAYS, 'Enviar', 'No enviar')
         
@@ -116,9 +118,10 @@ class op_functions:
             'TIPO'
         ]
         audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar'][columns]
+        audience = audience.rename(columns={'child_educational_guardian_email': 'Email' })
         #Agregar mail de prueba.
         indicator_light_email = {
-            'child_educational_guardian_email': 'jaime.arroyo@vitamina.cl', 
+            'Email': 'jaime.arroyo@vitamina.cl', 
             'TAG': '183567942-2023-02-06', 
             'TIPO': campaing_email_code}
         audience = audience.append(indicator_light_email, ignore_index=True)
