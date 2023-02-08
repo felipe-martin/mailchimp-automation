@@ -66,7 +66,7 @@ if __name__ == "__main__":
     
     #Proceso generacion de audiencia, creacion de campaña y posible envio
     #tags = fn.get_tag_list() #PENDIENTE!!!!
-    threshold_days = trigger_threshold_days
+    threshold_days = trigger_threshold_days * -1
     contacts = fn.get_contacts(current_date, threshold_days, campaing_email_code) #tags quitado hasta resolver
     print(f"[INFO] //////////////////// THIS EMAIL CONFIGURATION HAS {email_send_flag} SENDING SET 📧... ////////////////////")
 
