@@ -72,10 +72,11 @@ s3_client = boto3.client(
 adaptation_schedulled = read_adaptation_schedulled_aws('educational_center_admissions', dynamodb)
 adaptation_schedulled = adaptation_schedulled.sort_values(by="child_service_id", ascending=False)
 
-
+print(f'[INFO] //////////// REGISTROS LEIDOS: {adaptation_schedulled.shape[0]} ////////////')
 
 #Tabla adaptation_schedulled
 adaptation_schedulled['adaptations_total_Q'] = 1
+adaptation_schedulled['adaptations_not_schedulled_flag'] = np.where(adaptation_schedulled['child_adaptation_scheduling_flag']=="wasnt scheduled",1,0)
 adaptation_schedulled['adaptations_schedulled_flag'] = np.where(adaptation_schedulled['child_adaptation_scheduling_flag']=="true",1,0)
 
 child_adaptation_scheduling_dt = []
