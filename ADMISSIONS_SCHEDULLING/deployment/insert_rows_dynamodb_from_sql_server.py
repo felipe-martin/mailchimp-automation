@@ -303,7 +303,10 @@ if __name__ == "__main__":
     admissions = pd.read_sql_query(query, cnxn)
     admissions = admissions.rename(columns=columns_rename_dict)
     admissions = admissions.merge(current_adaptation_scheduled, how='left', on='child_service_id')
-    admissions['child_adaptation_scheduling_flag'] = np.where(admissions['child_adaptation_scheduling_dt'].isnull(), 'false', admissions['child_adaptation_scheduling_flag'])
+    try:
+        admissions['child_adaptation_scheduling_flag'] = np.where(admissions['child_adaptation_scheduling_dt'].isnull(), 'false', admissions['child_adaptation_scheduling_flag'])
+    except:
+        admissions['child_adaptation_scheduling_flag'] = np.where(admissions['child_adaptation_scheduling_dt'].isnull(), 'false', 'true') #first run
     admissions['child_adaptation_scheduling_comment'] = np.where(admissions['child_adaptation_scheduling_comment'].isnull(), 'Sin comentarios', admissions['child_adaptation_scheduling_comment'])
     admissions['child_adaptation_scheduling_dt'] = np.where(admissions['child_adaptation_scheduling_dt'].isnull(), "", admissions['child_adaptation_scheduling_dt'])
     admissions['child_adaptation_responsible'] = np.where(admissions['child_adaptation_responsible'].isnull(), "", admissions['child_adaptation_responsible'])
