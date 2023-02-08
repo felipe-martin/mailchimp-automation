@@ -308,11 +308,7 @@ if __name__ == "__main__":
     admissions['child_adaptation_scheduling_dt'] = np.where(admissions['child_adaptation_scheduling_dt'].isnull(), "", admissions['child_adaptation_scheduling_dt'])
     admissions['child_adaptation_responsible'] = np.where(admissions['child_adaptation_responsible'].isnull(), "", admissions['child_adaptation_responsible'])
     admissions['first_interview_flag'] = np.where(admissions['first_interview_flag'].isnull(), "", admissions['first_interview_flag'])
-
-    #Regla de negocio para marcar de forma automatica a niños no agendados
-    #for i, admission in admissions.iterrows():
         
-
     #Mejora pendiente. Calcular ratio de elementos subidos vs por subir.
 
     #admissions = admissions[~admissions['child_service_id'].isin(current_admisions)]
