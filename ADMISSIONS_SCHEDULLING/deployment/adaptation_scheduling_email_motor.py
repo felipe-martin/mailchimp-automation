@@ -70,7 +70,6 @@ if __name__ == "__main__":
     contacts = fn.get_contacts(current_date, threshold_days, campaing_email_code) #tags quitado hasta resolver
     print(f"[INFO] //////////////////// THIS EMAIL CONFIGURATION HAS {email_send_flag} SENDING SET 📧... ////////////////////")
 
-    sys.exit()
     # Continuar solo si hay mas de 1 registro en audiencia.
     if contacts.shape[0] > 1: 
         #Creacion de audiencia

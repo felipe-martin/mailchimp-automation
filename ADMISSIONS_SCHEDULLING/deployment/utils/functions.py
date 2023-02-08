@@ -85,6 +85,7 @@ class op_functions:
         'child_financial_guardian_email',
         'child_educational_guardian_email',
         'child_adaptation_scheduling_dt'
+        'child_adaptation_scheduling_flag'
         ]
 
         TRIGGER_THRESHOLD_DAYS = trigger_threshold_days
@@ -94,7 +95,7 @@ class op_functions:
         # Filtrar columnas
         educational_center_admissions = educational_center_admissions[columns]
         # Filtro para quedarnos solo con adaptaciones agendadas.
-        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_scheduling_dt']!=""]
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_scheduling_flag']=="true"]
         # Creacion de columnas de interes
         educational_center_admissions['child_adaptation_scheduling_dt'] = pd.to_datetime(educational_center_admissions['child_adaptation_scheduling_dt'], format=date_format) 
         educational_center_admissions['date'] = [x.date() for x in educational_center_admissions.child_adaptation_scheduling_dt]
