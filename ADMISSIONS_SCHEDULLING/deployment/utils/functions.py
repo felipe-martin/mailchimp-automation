@@ -84,7 +84,7 @@ class op_functions:
         'child_educational_guardian_id',
         'child_financial_guardian_email',
         'child_educational_guardian_email',
-        'child_adaptation_scheduling_dt'
+        'child_adaptation_scheduling_dt',
         'child_adaptation_scheduling_flag'
         ]
 
