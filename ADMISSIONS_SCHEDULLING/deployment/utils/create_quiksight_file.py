@@ -71,6 +71,7 @@ s3_client = boto3.client(
     aws_secret_access_key=LMS_AWS_SECRET_ACCESS_KEY) 
 
 adaptation_schedulled = read_adaptation_schedulled_aws('educational_center_admissions', dynamodb)
+adaptation_schedulled['child_service_id'] = adaptation_schedulled['child_service_id'].astype(int)
 adaptation_schedulled = adaptation_schedulled.sort_values(by="child_service_id", ascending=False)
 
 print(f'[INFO] //////////// REGISTROS LEIDOS: {adaptation_schedulled.shape[0]} ////////////')
