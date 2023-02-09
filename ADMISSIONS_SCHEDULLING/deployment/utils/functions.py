@@ -158,9 +158,11 @@ class op_functions:
             'TIPO'
         ]
         audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar']
-        #Marcar a los que enviaremos correos
-        self.batch_dynamodb_insert('child_mail_journey_control',audience,100, self.DYNAMODB_CLIENT)
-        
+        if audience.shape[0] > 1:
+            #Marcar a los que enviaremos correos
+            print("[INFO] /////////////////// INSERTING DATA TO JOURNEY CONTROL TABLE... ///////////////////")
+            self.batch_dynamodb_insert('child_mail_journey_control',audience,100, self.DYNAMODB_RESOURCE)
+            
         #Seleccionar campos necesarios para cargar audiencia
         audience = audience[columns]
         audience = audience.rename(columns={'child_educational_guardian_email': 'Email' })
