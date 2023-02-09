@@ -89,9 +89,31 @@ for adaptation_dt_iter in range(adaptation_schedulled.shape[0]):
         adaptation_schedulled['child_adaptation_scheduling_year'] = [x.year for x in adaptation_schedulled['child_adaptation_scheduling_dt']]
     except:
         continue
+
+#Tabla con email enviados
+child_mail_journey = read_adaptation_schedulled_aws('child_mail_journey_control', dynamodb)
+child_mail_journey['child_service_id'] = child_mail_journey['child_service_id'].astype(int)
+
+#Unir tablas para completar datos con mail enviado
+try:
+    adaptation_schedulled = adaptation_schedulled.merge(child_mail_journey, on='child_service_id', how='left')
+    adaptation_schedulled['child_adaptation_survey_email_sent_flag'] = adaptation_schedulled['child_adaptation_survey_email_sent_flag'].fillna('false') 
+    adaptation_schedulled['child_adaptation_survey_email_read_flag'] = adaptation_schedulled['child_adaptation_survey_email_read_flag'].fillna('false') 
+    adaptation_schedulled['child_adaptation_survey_completed_flag'] = adaptation_schedulled['child_adaptation_survey_completed_flag'].fillna('false') 
+    adaptation_schedulled['child_adaptation_survey_tag'] = adaptation_schedulled['child_adaptation_survey_tag'].fillna('false')
+    adaptation_schedulled['child_adaptation_survey_email_sent_dt'] = adaptation_schedulled['child_adaptation_survey_email_sent_dt'].fillna('')
+    adaptation_schedulled['child_welcome_email_sent_flag'] = adaptation_schedulled['child_welcome_email_sent_flag'].fillna('false')
+    adaptation_schedulled['child_welcome_email_read_flag'] = adaptation_schedulled['child_welcome_email_read_flag'].fillna('false') 
+    adaptation_schedulled['child_welcome_email_sent_dt'] = adaptation_schedulled['child_welcome_email_sent_dt'].fillna('') 
+    adaptation_schedulled['child_adaptation_scheduling_reminder_email_sent_flag'] = adaptation_schedulled['child_adaptation_scheduling_reminder_email_sent_flag'].fillna('false') 
+    adaptation_schedulled['child_adaptation_scheduling_reminder_email_read_flag'] = adaptation_schedulled['child_adaptation_scheduling_reminder_email_read_flag'].fillna('false')    
+    adaptation_schedulled['child_adaptation_scheduling_reminder_email_dt'] = adaptation_schedulled['child_adaptation_scheduling_reminder_email_dt'].fillna('false')
+except:
+    pass
 adaptation_schedulled.head()
 
 adaptation_schedulled.to_csv('adaptation_schedulling_monitoring.csv', index=False)
+
 
 #Subiendo csv a S3
 response = s3_client.upload_file('adaptation_schedulling_monitoring.csv','lms-monitoring-bucket','adaptation_schedulling_monitoring.csv')

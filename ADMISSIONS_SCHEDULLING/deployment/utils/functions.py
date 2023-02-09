@@ -161,7 +161,7 @@ class op_functions:
         if audience.shape[0] >= 1:
             #Marcar a los que enviaremos correos
             print("[INFO] /////////////////// INSERTING DATA TO JOURNEY CONTROL TABLE... ///////////////////")
-            self.batch_dynamodb_insert('child_mail_journey_control',audience,100, self.DYNAMODB_RESOURCE)
+            self.batch_dynamodb_insert('child_mail_journey_control',audience, 100, self.DYNAMODB_RESOURCE)
             
         #Seleccionar campos necesarios para cargar audiencia
         audience = audience[columns]
