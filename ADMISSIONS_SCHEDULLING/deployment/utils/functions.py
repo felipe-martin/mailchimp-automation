@@ -158,7 +158,7 @@ class op_functions:
             'TIPO'
         ]
         audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar']
-        if audience.shape[0] > 1:
+        if audience.shape[0] >= 1:
             #Marcar a los que enviaremos correos
             print("[INFO] /////////////////// INSERTING DATA TO JOURNEY CONTROL TABLE... ///////////////////")
             self.batch_dynamodb_insert('child_mail_journey_control',audience,100, self.DYNAMODB_RESOURCE)
@@ -169,10 +169,23 @@ class op_functions:
         
         #Agregar mail de prueba.
         indicator_light_email = {
-            'Email': 'jaime.arroyo@vitamina.cl', 
-            'TAG': '183567942-2023-02-06', 
+            'Email': 'jaime.arroyo@vitamina.com', 
+            'TAG': '18356794220230206', 
             'TIPO': campaing_email_code}
         audience = audience.append(indicator_light_email, ignore_index=True)
+        #Segundo mail de prueba
+        indicator_light_email = {
+            'Email': 'javiera.carter@vitamina.com', 
+            'TAG': '1812312920230206', 
+            'TIPO': campaing_email_code}
+        audience = audience.append(indicator_light_email, ignore_index=True)
+        #Tercer mail de prueba
+        indicator_light_email = {
+            'Email': 'camila.saa@vitamina.com', 
+            'TAG': '1915289320230206', 
+            'TIPO': campaing_email_code}
+        audience = audience.append(indicator_light_email, ignore_index=True)
+
         print("[INFO] /////////////////// SHOWING AUDIENCE TO SEND EMAIL ... ///////////////////")
         print(audience.head())
 
