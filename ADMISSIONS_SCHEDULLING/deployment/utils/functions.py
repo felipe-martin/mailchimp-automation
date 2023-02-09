@@ -6,6 +6,7 @@ warnings.filterwarnings("ignore")
 import pyodbc
 import numpy as np
 import holidays
+import time
 date_format = '%d/%m/%Y %H:%M:%S'
 
 
@@ -74,6 +75,44 @@ class op_functions:
             f.write(f'{str(e)}\n')
             f.close()
         return reg_
+    
+
+    def batch_dynamodb_insert(self,table_name, dataframe, batch_size, dynamodb_conn):
+
+        table = dynamodb_conn.Table(table_name)
+
+        # Define the batch size taking care that the limit is 25
+        batch_size = min(100, batch_size)
+
+        # Iterate over the dataframe in chunks of 25 rows
+        for i in range(0, len(dataframe), batch_size):
+            with table.batch_writer() as batch:
+                for j, row in dataframe[i:i + batch_size].iterrows():
+                    item = {
+
+                        'child_service_id': int(row['child_service_id']),
+                        'child_adaptation_survey_email_sent_flag': "true",
+                        'child_adaptation_survey_email_read_flag': "false",
+                        'child_adaptation_survey_completed_flag': "false",
+                        'child_adaptation_survey_tag': str(row['TAG']),
+                        'child_adaptation_survey_email_sent_dt': str(row['current_date']),
+                        'child_welcome_email_sent_flag': "false",
+                        'child_welcome_email_read_flag': "false",
+                        'child_welcome_email_sent_dt': "",
+                        'child_adaptation_scheduling_reminder_email_sent_flag': "false",
+                        'child_adaptation_scheduling_reminder_email_read_flag': "false",
+                        'child_adaptation_scheduling_reminder_email_dt': "false"
+                        
+                    }
+                    try:
+                        batch.put_item(Item=item)
+                        time.sleep(0.5)
+                        print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
+                    except Exception as e:
+                        print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
+                        f = open("admissions_adaptation_schedulling.txt", "a")
+                        f.write(f'{str(e)}\n')
+                        f.close()
 
     
     def get_contacts(self, current_date, trigger_threshold_days, campaing_email_code):
@@ -118,8 +157,14 @@ class op_functions:
             'TAG',
             'TIPO'
         ]
-        audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar'][columns]
+        audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar']
+        #Marcar a los que enviaremos correos
+        self.batch_dynamodb_insert('child_mail_journey_control',audience,100, self.DYNAMODB_CLIENT)
+        
+        #Seleccionar campos necesarios para cargar audiencia
+        audience = audience[columns]
         audience = audience.rename(columns={'child_educational_guardian_email': 'Email' })
+        
         #Agregar mail de prueba.
         indicator_light_email = {
             'Email': 'jaime.arroyo@vitamina.cl', 
