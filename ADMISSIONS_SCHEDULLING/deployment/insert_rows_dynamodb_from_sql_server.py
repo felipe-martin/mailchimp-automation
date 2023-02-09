@@ -7,10 +7,45 @@ import numpy as np
 import pyodbc
 import warnings
 import time
+import datetime
 warnings.filterwarnings('ignore')
 
 
 '-----------------------------------------2. Functions------------------------------------------------'
+def get_date():
+    #Definiendo variable con fecha de proceso
+    current_time = datetime.datetime.now()
+    date = current_time.date()
+    Y = current_time.year
+    M = current_time.month
+    d = current_time.day
+    h = current_time.hour
+    m = current_time.minute
+    s = current_time.second
+    mailchimp_format_date = f"{Y}{M}{d}"
+    current_date = f"{d}/{M}/{Y} {h}:{m}:{s}"
+    
+    return current_date
+
+
+def insert_dynamodb_table(current_date, registers_no, dynamodb_client):
+    print('[INFO] //////////// INSERTANDO REGISTRO EN TABLA DYNAMODB ////////////')
+    # Create the item to be inserted
+    item = {
+    
+    "data_ingestion_process_dt": {
+        "S": f'{current_date}'
+    },
+    "n_loaded_rows": {
+        "S": f'{registers_no}'
+    }}
+    print('[INFO] //////////// INSERT EJECUTADO CORRECTAMENTE ////////////')
+
+    # Insert the item into the DynamoDB table
+    response = dynamodb_client.put_item(TableName='monitoring_data_ingestion', Item=item)
+    
+    return response
+
 
 #Configuracion e inicializacion del cliente dynamodb con boto3
 def aws_dynamo_service(aws_access_key_id, aws_secret_access_key, region_name):
@@ -317,3 +352,8 @@ if __name__ == "__main__":
     print(f"[INFO] //////////// REGISTROS LEIDOS EXITOSAMENTE. SE SUBIRAN {admissions.shape[0]} FILAS")
     
     batch_dynamodb_insert('educational_center_admissions', admissions, 100, dynamodb_resource)
+
+    current_date = get_date()
+    no_rows = admissions.shape[0]
+    #Guardar registro de actualizacion
+    insert_dynamodb_table(current_date, no_rows, dynamodb_client)
