@@ -86,7 +86,7 @@ class op_functions:
         batch_size = min(50, batch_size)
 
         # Iterate over the dataframe in chunks of 25 rows
-        for i in tqdm(range(0, len(dataframe), batch_size), desc ="Inserting rows from SQL"):
+        for i in tqdm(range(0, len(dataframe), batch_size), desc ="Inserting rows into DynamoDB"):
             with table.batch_writer() as batch:
                 for j, row in dataframe[i:i + batch_size].iterrows():
                     item = {

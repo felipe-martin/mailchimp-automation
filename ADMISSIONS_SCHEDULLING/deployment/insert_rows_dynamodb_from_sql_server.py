@@ -8,6 +8,7 @@ import pyodbc
 import warnings
 import time
 import datetime
+import tqdm
 warnings.filterwarnings('ignore')
 
 
@@ -74,10 +75,10 @@ def batch_dynamodb_insert(table_name, dataframe, batch_size, dynamodb_conn):
     table = dynamodb_conn.Table(table_name)
 
     # Define the batch size taking care that the limit is 25
-    batch_size = min(300, batch_size)
+    batch_size = min(50, batch_size)
 
     # Iterate over the dataframe in chunks of 25 rows
-    for i in range(0, len(dataframe), batch_size):
+    for i in tqdm(range(0, len(dataframe), batch_size), "Loading DynamoDB from SQL Server:"):
         with table.batch_writer() as batch:
             for j, row in dataframe[i:i + batch_size].iterrows():
                 item = {
