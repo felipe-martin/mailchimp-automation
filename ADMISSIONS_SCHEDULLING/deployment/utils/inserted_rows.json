@@ -1,0 +1,17 @@
+
+{
+    "fileLocations": [
+        {
+            "URIs": [
+                "s3://lms-monitoring-bucket/inserted_rows.csv"
+            ]
+        }
+    ],
+    "globalUploadSettings": {
+        "format": "CSV",
+        "delimiter": ",",
+        "textqualifier": "'",
+        "containsHeader": "true"
+    }
+}
+                            

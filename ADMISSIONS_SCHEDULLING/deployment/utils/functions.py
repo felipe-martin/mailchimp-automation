@@ -7,7 +7,7 @@ import pyodbc
 import numpy as np
 import holidays
 import time
-import tqdm
+from tqdm import tqdm
 date_format = '%d/%m/%Y %H:%M:%S'
 
 

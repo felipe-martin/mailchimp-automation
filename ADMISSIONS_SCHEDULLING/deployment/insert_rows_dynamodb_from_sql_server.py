@@ -8,7 +8,7 @@ import pyodbc
 import warnings
 import time
 import datetime
-import tqdm
+from tqdm import tqdm
 warnings.filterwarnings('ignore')
 
 
