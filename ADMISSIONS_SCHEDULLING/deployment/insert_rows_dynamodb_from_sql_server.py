@@ -118,7 +118,7 @@ def batch_dynamodb_insert(table_name, dataframe, batch_size, dynamodb_conn):
                 }
                 try:
                     batch.put_item(Item=item)
-                    #time.sleep(0.1)
+                    time.sleep(0.2)
                     #print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
                 except Exception as e:
                     print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
