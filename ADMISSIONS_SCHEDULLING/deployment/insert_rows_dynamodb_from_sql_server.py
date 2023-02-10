@@ -118,13 +118,14 @@ def batch_dynamodb_insert(table_name, dataframe, batch_size, dynamodb_conn):
                 }
                 try:
                     batch.put_item(Item=item)
-                    time.sleep(0.5)
-                    print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
+                    #time.sleep(0.1)
+                    #print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
                 except Exception as e:
                     print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
                     f = open("admissions_adaptation_schedulling.txt", "a")
                     f.write(f'{str(e)}\n')
                     f.close()
+            print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
 
 
 
