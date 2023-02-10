@@ -2,6 +2,7 @@
 '--------------------------------1. Imports--------------------------------------------'
 
 import pandas as pd
+import sys
 import boto3
 import numpy as np
 import os, json
@@ -36,7 +37,7 @@ def aws_dynamo_service(aws_access_key_id, aws_secret_access_key, region_name):
 
 #Lectura de base de datos registros_evaluacion
 def read_adaptation_schedulled_aws(table_name="practical_lms_adaptation_schedulled", client=None):
-    print('[INFO] //////////// LECTURA TABLA REGISTROS EVALUACION EN DYNAMODB ////////////')
+    print(f'[INFO] //////////// LECTURA TABLA {table_name} EN DYNAMODB ////////////')
     try:
         #Codigo para escanear tabla registros evaluacion desde dynamodb solo para registros no procesados por RPA
         response = client.scan(
@@ -48,7 +49,7 @@ def read_adaptation_schedulled_aws(table_name="practical_lms_adaptation_schedull
             reg_.rename(columns={column:column[:-2]}, inplace=True)
         #print("[INFO] Mostrando 5 primeros registros de evaluacion de la base cargada")
         #print(self.reg_.head())
-        print('[INFO] //////////// LECTURA TABLA REGISTROS EVALUACION CORRECTA ////////////')
+        print('[INFO] //////////// LECTURA TABLA CORRECTA ////////////')
     except Exception as e:
         print("[INFO] No fue posible leer la base registros evaluacion desde DynamoDB")    
         f = open("videofinder_log.txt", "a")
@@ -95,6 +96,7 @@ for adaptation_dt_iter in range(adaptation_schedulled.shape[0]):
 #Tabla con email enviados
 child_mail_journey = read_adaptation_schedulled_aws('child_mail_journey_control', dynamodb)
 child_mail_journey['child_service_id'] = child_mail_journey['child_service_id'].astype(int)
+print(f'[INFO] //////////// REGISTROS LEIDOS: {child_mail_journey.shape[0]} ////////////')
 
 #Unir tablas para completar datos con mail enviado
 adaptation_schedulled = adaptation_schedulled.merge(child_mail_journey, on='child_service_id', how='left')
@@ -109,9 +111,8 @@ adaptation_schedulled['child_welcome_email_sent_dt'] = adaptation_schedulled['ch
 adaptation_schedulled['child_adaptation_scheduling_reminder_email_sent_flag'] = adaptation_schedulled['child_adaptation_scheduling_reminder_email_sent_flag'].fillna('false') 
 adaptation_schedulled['child_adaptation_scheduling_reminder_email_read_flag'] = adaptation_schedulled['child_adaptation_scheduling_reminder_email_read_flag'].fillna('false')    
 adaptation_schedulled['child_adaptation_scheduling_reminder_email_dt'] = adaptation_schedulled['child_adaptation_scheduling_reminder_email_dt'].fillna('false')
-adaptation_schedulled.head()
+
 adaptation_schedulled.to_csv('adaptation_schedulling_monitoring.csv', index=False)
-time.sleep(3)
 
 #Subiendo csv a S3
 response = s3_client.upload_file('adaptation_schedulling_monitoring.csv','lms-monitoring-bucket','adaptation_schedulling_monitoring.csv')

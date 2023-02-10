@@ -7,6 +7,7 @@ import pyodbc
 import numpy as np
 import holidays
 import time
+import tqdm
 date_format = '%d/%m/%Y %H:%M:%S'
 
 
@@ -82,10 +83,10 @@ class op_functions:
         table = dynamodb_conn.Table(table_name)
 
         # Define the batch size taking care that the limit is 25
-        batch_size = min(100, batch_size)
+        batch_size = min(50, batch_size)
 
         # Iterate over the dataframe in chunks of 25 rows
-        for i in range(0, len(dataframe), batch_size):
+        for i in tqdm(range(0, len(dataframe), batch_size), desc ="Inserting rows from SQL"):
             with table.batch_writer() as batch:
                 for j, row in dataframe[i:i + batch_size].iterrows():
                     item = {
@@ -106,7 +107,7 @@ class op_functions:
                     }
                     try:
                         batch.put_item(Item=item)
-                        time.sleep(0.5)
+                        time.sleep(0.2)
                         print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
                     except Exception as e:
                         print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
