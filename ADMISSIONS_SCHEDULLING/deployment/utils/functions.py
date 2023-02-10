@@ -159,6 +159,9 @@ class op_functions:
             'TIPO'
         ]
         audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar']
+        #Eliminar registros sin correo electronico para seguridad
+        audience['child_educational_guardian_email'] = np.where(audience['child_educational_guardian_email']=="", np.nan, audience['child_educational_guardian_email'])
+        audience.dropna(subset=['child_educational_guardian_email'], inplace=True)
         if audience.shape[0] >= 1:
             #Marcar a los que enviaremos correos
             print("[INFO] /////////////////// INSERTING DATA TO JOURNEY CONTROL TABLE... ///////////////////")
