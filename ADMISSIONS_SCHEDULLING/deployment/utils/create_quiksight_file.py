@@ -115,8 +115,11 @@ adaptation_schedulled['child_adaptation_scheduling_reminder_email_dt'] = adaptat
 adaptation_schedulled.to_csv('adaptation_schedulling_monitoring.csv', index=False)
 
 #Tabla con carga de datos
-loaded_rows = read_adaptation_schedulled_aws('child_mail_journey_control', dynamodb)
+loaded_rows = read_adaptation_schedulled_aws('monitoring_data_ingestion', dynamodb)
+loaded_rows['data_ingestion_process_dt'] = pd.to_datetime(loaded_rows['data_ingestion_process_dt'], format=date_format)
+loaded_rows.to_csv('inserted_rows.csv', index=False)
 
 #Subiendo csv a S3
 response = s3_client.upload_file('adaptation_schedulling_monitoring.csv','lms-monitoring-bucket','adaptation_schedulling_monitoring.csv')
-print('[INFO] //////////// TABLA ACTUALIZADA CORRECTAMENTE ////////////')
+response = s3_client.upload_file('inserted_rows.csv','lms-monitoring-bucket','inserted_rows.csv')
+print('[INFO] //////////// TABLAS ACTUALIZADAS CORRECTAMENTE ////////////')
