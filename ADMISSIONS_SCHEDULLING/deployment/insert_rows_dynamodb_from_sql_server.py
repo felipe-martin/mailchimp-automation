@@ -346,7 +346,7 @@ if __name__ == "__main__":
     admissions['child_adaptation_scheduling_dt'] = np.where(admissions['child_adaptation_scheduling_dt'].isnull(), "", admissions['child_adaptation_scheduling_dt'])
     admissions['child_adaptation_responsible'] = np.where(admissions['child_adaptation_responsible'].isnull(), "", admissions['child_adaptation_responsible'])
     admissions['first_interview_flag'] = np.where(admissions['first_interview_flag'].isnull(), "", admissions['first_interview_flag'])
-    admissions['flag_poc_center'] = np.where(admissions['educational_center_code'].isin(['NPL2','QLC','SMH','CCTR']), "true", "false")
+    admissions['flag_poc_center'] = np.where(admissions['educational_center_code'].isin(['NPL2','QLC','SMH','CCBA']), "true", "false")
         
     #Mejora pendiente. Calcular ratio de elementos subidos vs por subir.
 
