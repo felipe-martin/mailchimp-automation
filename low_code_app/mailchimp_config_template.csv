@@ -1,3 +1,3 @@
-﻿campaing_email_code;automation_send_email_flag;mailchimp_html_template_code;email_from_name;email_reply_to;email_subject
-ENADAP;false;10000034;Vitamina;experiencia@vitamina.cl;¿Cuéntanos cómo fueron tus primeros días en Vitamina? 🧡
-PREFACT;false;10000034;Pre-facturación Vitamina;facturacion@vitamina.cl;Proceso de pre-facturación Vitamina
+campaing_email_code,automation_send_email_flag,mailchimp_html_template_code,email_from_name,email_reply_to,email_subject
+ENADAP,Manual,10000034,Vitamina,experiencia@vitamina.cl,¿Cuéntanos cómo fueron tus primeros días en Vitamina? 🧡
+PREFACT,Manual,10000034,Pre-facturación Vitamina,facturacion@vitamina.cl,Proceso de pre-facturación Vitamina
