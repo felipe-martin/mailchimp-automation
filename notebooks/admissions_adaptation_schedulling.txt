@@ -1,0 +1,6 @@
+HTTPSConnectionPool(host='xmmk-gpob-yjqm.n7.xano.io', port=443): Max retries exceeded with url: /api:9KDs3Qon:v1/_educational_center_admissions (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x12c010910>: Failed to establish a new connection: [Errno 61] Connection refused'))
+HTTPSConnectionPool(host='xmmk-gpob-yjqm.n7.xano.io', port=443): Max retries exceeded with url: /api:9KDs3Qon:v1/_educational_center_admissions (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x12b4d1ca0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+HTTPSConnectionPool(host='xmmk-gpob-yjqm.n7.xano.io', port=443): Max retries exceeded with url: /api:9KDs3Qon:v1/_educational_center_admissions (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x12b4ed430>: Failed to establish a new connection: [Errno 60] Operation timed out'))
+name 'data' is not defined
+name 'data' is not defined
+name 'data' is not defined

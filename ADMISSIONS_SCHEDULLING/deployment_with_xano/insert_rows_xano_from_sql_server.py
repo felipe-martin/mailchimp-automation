@@ -1,18 +1,19 @@
 
 '-----------------------------------------1. Imports------------------------------------------------'
-
-import boto3
-import pandas as pd
+import requests, json
 import numpy as np
+import pandas as pd
 import pyodbc
 import warnings
-import time
 import datetime
+import holidays
+warnings.filterwarnings("ignore")
 from tqdm import tqdm
-warnings.filterwarnings('ignore')
+import time
 
 
-'-----------------------------------------2. Functions------------------------------------------------'
+"-----------------------------------------2. Functions------------------------------------------------"
+
 def get_date():
     #Definiendo variable con fecha de proceso
     current_time = datetime.datetime.now()
@@ -29,149 +30,128 @@ def get_date():
     return current_date
 
 
-def insert_dynamodb_table(current_date, registers_no, dynamodb_client):
-    print('[INFO] //////////// INSERTANDO REGISTRO EN TABLA DYNAMODB ////////////')
+def insert_monitoring_data_ingestion(endpoint_url, current_date, registers_no):
+    print("[INFO] //////////// INSERTANDO REGISTRO EN TABLA DYNAMODB ////////////")
     # Create the item to be inserted
-    item = {
-    
-    "data_ingestion_process_dt": {
-        "S": f'{current_date}'
-    },
-    "n_loaded_rows": {
-        "S": f'{registers_no}'
-    }}
-    print('[INFO] //////////// INSERT EJECUTADO CORRECTAMENTE ////////////')
+    item = {"item": {
+        "data_ingestion_process_dt": f"{current_date}",
+        "loaded_rows_value": registers_no
+        }}
+    item = json.dumps(item)
+    print("[INFO] //////////// INSERT EJECUTADO CORRECTAMENTE ////////////")
 
     # Insert the item into the DynamoDB table
-    response = dynamodb_client.put_item(TableName='monitoring_data_ingestion', Item=item)
+    response = requests.post(endpoint_url, data=item)
     
     return response
 
 
-#Configuracion e inicializacion del cliente dynamodb con boto3
-def aws_dynamo_service(aws_access_key_id, aws_secret_access_key, region_name):
-    try:
-        #Realizando conexion con AWS DynamoDB
-        conn = boto3.resource("dynamodb", 
-            region_name=region_name,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
-        
-        client = boto3.client("dynamodb", 
-            region_name=region_name,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
-        
-    except Exception as e:
-        print("[INFO] No fue posible conectarse a la DB")    
-        f = open("videofinder_log.txt", "a")
-        f.write(f'{str(e)}\n')
-        f.close()
-    return conn, client
-
-
-def batch_dynamodb_insert(table_name, dataframe, batch_size, dynamodb_conn):
-
-    table = dynamodb_conn.Table(table_name)
-
-    # Define the batch size taking care that the limit is 25
-    batch_size = min(50, batch_size)
-
-    # Iterate over the dataframe in chunks of 25 rows
-    for i in tqdm(range(0, len(dataframe), batch_size), "Loading DynamoDB from SQL Server:"):
-        with table.batch_writer() as batch:
-            for j, row in dataframe[i:i + batch_size].iterrows():
-                item = {
-                    "child_service_id": int(row['child_service_id']),
-                    "child_adaptation_scheduling_flag": str(row['child_adaptation_scheduling_flag']),
-                    "child_adaptation_scheduling_dt": str(row['child_adaptation_scheduling_dt']),
-                    "child_adaptation_scheduling_comment": str(row['child_adaptation_scheduling_comment']),
-                    "child_adaptation_responsible": str(row['child_adaptation_responsible']),
-                    "first_interview_flag": str(row['first_interview_flag']),
-                    "child_admission_channel_value": str(row['child_admission_channel_value']),
-                    "child_date_birth": str(row['child_date_birth']),
-                    "child_dni_code": int(row['child_dni_code']),
-                    "child_educational_guardian_dni_code": int(row['child_educational_guardian_dni_code']),
-                    "child_educational_guardian_email": str(row['child_educational_guardian_email']),
-                    "child_educational_guardian_id": int(row['child_educational_guardian_id']),
-                    "child_educational_guardian_name": str(row['child_educational_guardian_name']),
-                    "child_educational_guardian_relationship_desc":  str(row['child_educational_guardian_relationship_desc']),
-                    "child_financial_guardian_dni_code": int(row['child_financial_guardian_dni_code']),
-                    "child_financial_guardian_email":  str(row['child_financial_guardian_email']),
-                    "child_financial_guardian_id":  int(row['child_financial_guardian_id']),
-                    "child_financial_guardian_name":  str(row['child_financial_guardian_name']),
-                    "child_financial_guardian_relationship_desc":  str(row['child_financial_guardian_relationship_desc']),
-                    "child_gender_desc":  str(row['child_gender_desc']),
-                    "child_last_enrollment_dt":  str(row['child_last_enrollment_dt']),
-                    "child_last_renewal_process_dt":  str(row['child_last_renewal_process_dt']),
-                    "child_level_name":  str(row['child_level_name']),
-                    "child_name":  str(row['child_name']),
-                    "child_service_start_dt":  str(row['child_service_start_dt']),
-                    "child_service_status":  str(row['child_service_status']),
-                    "child_service_type_desc":  str(row['child_service_type_desc']),
-                    "child_vitamina_id":  int(row['child_vitamina_id']),
-                    "educational_center_code":  str(row['educational_center_code']),
-                    "educational_center_name":  str(row['educational_center_name']),
-                    "educational_center_room_id":  int(row['educational_center_room_id']),
-                    "child_attendance_days_value": int(row['child_attendance_days_value']),
-                    "flag_poc_center": str(row['flag_poc_center'])
-                }
-                try:
-                    batch.put_item(Item=item)
-                    time.sleep(0.5)
-                    #print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
-                except Exception as e:
-                    print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
-                    f = open("admissions_adaptation_schedulling.txt", "a")
-                    f.write(f'{str(e)}\n')
-                    f.close()
-            print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
-
-
-
 #Lectura de base de datos registros_evaluacion
-def scan_dynamodb_table(table_name, client):
-    print(f'[INFO] //////////// LECTURA TABLA {table_name} DESDE DYNAMODB ////////////')
+def read_data_to_dataframe(endpoint_url):
+    """
+    Reads data from a specified endpoint URL as JSON and converts it to a Pandas DataFrame.
+    
+    Args:
+    - endpoint_url (str): the URL of the endpoint to read the data from
+    
+    Returns:
+    - pandas.DataFrame: the DataFrame containing the data read from the endpoint
+    """
+    print(f'[INFO] //////////// LECTURA TABLA DESDE XANO USANDO ENDPOINT... ////////////')
     try:
-        #Codigo para escanear tabla registros evaluacion desde dynamodb solo para registros no procesados por RPA
-        response = client.scan(
-            TableName=table_name)
-        #Convertir el resultado de dynamoDB a DataFrame
-        reg_ = pd.json_normalize(response["Items"])
-        #Rename columns droping the dynamo json type (Ex. .S for String)
-        for column in reg_.columns.to_list():
-            reg_.rename(columns={column:column[:-2]}, inplace=True)
-        #print("[INFO] Mostrando 5 primeros registros de evaluacion de la base cargada")
-        #print(self.reg_.head())
-        print(f'[INFO] //////////// LECTURA TABLA {table_name} CORRECTA ////////////')
+        # Make a GET request to the endpoint and get the response as JSON
+        response = requests.get(endpoint_url)
+        json_data = response.json()
+        # Convert the JSON data to a DataFrame
+        df = pd.DataFrame(json_data)
+        print(f'[INFO] //////////// LECTURA TABLA CORRECTA... ////////////')
     except Exception as e:
-        print("[INFO] No fue posible leer la base registros evaluacion desde DynamoDB")    
+        print("[INFO] IT WASN'T POSSIBLE TO READ FROM XANO. PLEASE CHECK LOG... 🔍")    
         f = open("admissions_adaptation_schedulling.txt", "a")
         f.write(f'{str(e)}\n')
         f.close()
-    return reg_
+    return df
 
+
+def post_dataframe_rows_bulk(endpoint_url, dataframe, batch_size):
+
+    # Iterate over the dataframe in chunks of 300 rows
+    for i in tqdm(range(0, len(dataframe), batch_size), "Loading Xano from SQL Server:"):
+        items = []
+        for j, row in dataframe[i:i + batch_size].iterrows():
+            item = {
+            "child_service_id": int(row["child_service_id"]),
+            "child_adaptation_scheduling_flag": str(row["child_adaptation_scheduling_flag"]),
+            "child_adaptation_scheduling_dt": str(row["child_adaptation_scheduling_dt"]),
+            "child_adaptation_scheduling_comment": str(row["child_adaptation_scheduling_comment"]),
+            "child_adaptation_responsible": str(row["child_adaptation_responsible"]),
+            "first_interview_flag": str(row["first_interview_flag"]),
+            "child_admission_channel_value": str(row["child_admission_channel_value"]),
+            "child_date_birth": str(row["child_date_birth"]),
+            "child_dni_code": int(row["child_dni_code"]),
+            "child_educational_guardian_dni_code": int(row["child_educational_guardian_dni_code"]),
+            "child_educational_guardian_email": str(row["child_educational_guardian_email"]),
+            "child_educational_guardian_id": int(row["child_educational_guardian_id"]),
+            "child_educational_guardian_name": str(row["child_educational_guardian_name"]),
+            "child_educational_guardian_relationship_desc":  str(row["child_educational_guardian_relationship_desc"]),
+            "child_financial_guardian_dni_code": int(row["child_financial_guardian_dni_code"]),
+            "child_financial_guardian_email":  str(row["child_financial_guardian_email"]),
+            "child_financial_guardian_id":  int(row["child_financial_guardian_id"]),
+            "child_financial_guardian_name":  str(row["child_financial_guardian_name"]),
+            "child_financial_guardian_relationship_desc":  str(row["child_financial_guardian_relationship_desc"]),
+            "child_gender_desc":  str(row["child_gender_desc"]),
+            "child_last_enrollment_dt":  str(row["child_last_enrollment_dt"]),
+            "child_last_renewal_process_dt":  str(row["child_last_renewal_process_dt"]),
+            "child_level_name":  str(row["child_level_name"]),
+            "child_name":  str(row["child_name"]),
+            "child_service_start_dt":  str(row["child_service_start_dt"]),
+            "child_service_status":  str(row["child_service_status"]),
+            "child_service_type_desc":  str(row["child_service_type_desc"]),
+            "child_vitamina_id":  int(row["child_vitamina_id"]),
+            "educational_center_code":  str(row["educational_center_code"]),
+            "educational_center_name":  str(row["educational_center_name"]),
+            "educational_center_room_id":  int(row["educational_center_room_id"]),
+            "child_attendance_days_value": int(row["child_attendance_days_value"]),
+            "flag_poc_center": str(row["flag_poc_center"])
+            }
+            items.append(item)
+        json_array = f'"items" : {items}'
+        json_array = "{" + json_array + "}"
+        json_array = json_array.replace("'",'"')
+        data = json.loads(json_array)
+          
+        try:
+            response = requests.post(endpoint_url, json=data)
+            #print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+        except Exception as e:
+            print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
+            f = open("admissions_adaptation_schedulling.txt", "a")
+            f.write(f"{str(e)}\n")
+            f.close()
+    print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+        
 
 '-----------------------------------------3. Credentials------------------------------------------------'
 
-#dynamodb
-AWS_ACCESS_KEY_ID = "AKIAQRW6JXYJBL7IYU4P"
-AWS_SECRET_ACCESS_KEY = "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"
-REGION = "us-east-1"
-SERVICE_NAME="s3"
+#sql server
+server = "10.10.5.7,1433" 
+database = "vitamina" 
+username = "consulta" 
+password = "consulta1" 
+
+#endpoint
+educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_educational_center_admissions_bulk"
+adaptation_schedulling_calendar_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_adaptation_schedulling_calendar"
+current_educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_educational_center_admissions"
+monitoring_data_ingestion_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_monitoring_data_ingestion"
+
+
+"-----------------------------------------4. Conexiones------------------------------------------------"
 
 #sql server
-server = '10.10.5.7,1433' 
-database = 'vitamina' 
-username = 'consulta' 
-password = 'consulta1' 
-
-'-----------------------------------------4. Conexiones------------------------------------------------'
-#sql server
-cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+password)
+cnxn = pyodbc.connect("DRIVER={ODBC Driver 17 for SQL Server};SERVER="+server+";DATABASE="+database+";UID="+username+";PWD="+password)
 cursor = cnxn.cursor()
-#dynamodb
-dynamodb_resource, dynamodb_client = aws_dynamo_service(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION)
+
 
 '-----------------------------------------5. Query------------------------------------------------'
 
@@ -333,16 +313,16 @@ columns_rename_dict = {
 '-----------------------------------------6. Run------------------------------------------------'
 
 if __name__ == "__main__":
-    
-    current_adaptation_scheduled = scan_dynamodb_table('adaptation_schedulling_calendar', dynamodb_client)
+    #Lectura de tabla de calendario de adaptaciones agendadas 
+    current_adaptation_scheduled = read_data_to_dataframe(adaptation_schedulling_calendar_endpoint)
     current_adaptation_scheduled['child_service_id'] = current_adaptation_scheduled['child_service_id'].astype(int)
     print(f"[INFO] //////////// TOTAL AGENDAMIENTOS REALIZADOS: {len(current_adaptation_scheduled)} REGISTROS")
 
-    #Count
-
+    #Carga base desde SQL Server VTM
     admissions = pd.read_sql_query(query, cnxn)
     admissions = admissions.rename(columns=columns_rename_dict)
     admissions = admissions.merge(current_adaptation_scheduled, how='left', on='child_service_id')
+    admissions['child_vitamina_id'] = admissions['child_vitamina_id'].astype(int) 
     admissions['child_adaptation_scheduling_flag'] = np.where(admissions['child_adaptation_responsible']=="No agendado", 'wasnt scheduled',
                                                                 np.where((~admissions['child_adaptation_scheduling_dt'].isnull()) & (admissions['child_adaptation_responsible']!="No agendado"), 'true', 'false'))
     admissions['child_adaptation_scheduling_comment'] = np.where(admissions['child_adaptation_scheduling_comment'].isnull(), 'Sin comentarios', admissions['child_adaptation_scheduling_comment'])
@@ -350,15 +330,21 @@ if __name__ == "__main__":
     admissions['child_adaptation_responsible'] = np.where(admissions['child_adaptation_responsible'].isnull(), "", admissions['child_adaptation_responsible'])
     admissions['first_interview_flag'] = np.where(admissions['first_interview_flag'].isnull(), "", admissions['first_interview_flag'])
     admissions['flag_poc_center'] = np.where(admissions['educational_center_code'].isin(['NPL2','QLC','SMH','CCBA']), "true", "false")
-        
+
     #Mejora pendiente. Calcular ratio de elementos subidos vs por subir.
 
-    #admissions = admissions[~admissions['child_service_id'].isin(current_admisions)]
     print(f"[INFO] //////////// REGISTROS LEIDOS EXITOSAMENTE. SE SUBIRAN {admissions.shape[0]} FILAS")
-    
-    batch_dynamodb_insert('educational_center_admissions', admissions, 100, dynamodb_resource)
+
+    #insertar registros en base de datos Xano
+    response = post_dataframe_rows_bulk(educational_center_admissions_endpoint, admissions, 300)
+    f = open("admissions_adaptation_schedulling.txt", "a")
+    f.write(f"{str(response)}\n")
+    f.close()
 
     current_date = get_date()
     no_rows = admissions.shape[0]
     #Guardar registro de actualizacion
-    insert_dynamodb_table(current_date, no_rows, dynamodb_client)
+    response = insert_monitoring_data_ingestion(monitoring_data_ingestion_endpoint, current_date, no_rows)
+    f = open("admissions_adaptation_schedulling.txt", "a")
+    f.write(f"{str(response)}\n")
+    f.close()

@@ -1,0 +1,6 @@
+boto3==1.26.61
+holidays==0.19
+mailchimp3==3.0.17
+numpy==1.23.5
+pandas==1.5.2
+pyodbc==4.0.35
