@@ -119,6 +119,7 @@ def post_dataframe_rows_bulk(endpoint_url, dataframe, batch_size):
         json_array = "{" + json_array + "}"
         json_array = json_array.replace("'",'"')
         data = json.loads(json_array)
+        
           
         try:
             response = requests.post(endpoint_url, json=data)
