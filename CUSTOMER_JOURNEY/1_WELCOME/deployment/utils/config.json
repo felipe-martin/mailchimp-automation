@@ -1,0 +1,34 @@
+{
+    "mailchimp_credentials": 
+        {
+            "user": "vitamina.rcd@gmail.com",
+            "api-key": "064e35a5ec6d76812f4877ac3c910561-us17"
+        }
+    ,
+    "sql_server_credentials":
+        {
+            "server" : "10.10.5.49,1433",
+            "database" : "master",
+            "username" : "qv_consulta",
+            "password" : "QlikView2009"
+        }
+    ,
+    "dynamodb_credentials":
+        {
+            "aws_access_key_id":"AKIAQRW6JXYJBL7IYU4P",
+            "aws_secret_access_key":"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",
+            "region":"us-east-1"
+        }
+    ,
+    "xano_endpoints":
+        {
+            "bulk_educational_center_admissions_endpoint" : "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_educational_center_admissions_bulk",
+            "adaptation_schedulling_calendar_endpoint" : "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_adaptation_schedulling_calendar",
+            "current_educational_center_admissions_endpoint" : "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_educational_center_admissions",
+            "monitoring_data_ingestion_endpoint" : "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_monitoring_data_ingestion",
+            "child_mail_journey_control_endpoint" : "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_child_mail_journey_control",
+            "mailchimp_config_template_endpoint" :  "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_mailchimp_config_template"
+            
+        }
+
+}
