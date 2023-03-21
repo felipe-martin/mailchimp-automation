@@ -95,7 +95,7 @@ class op_functions:
                 f = open("admissions_adaptation_schedulling.txt", "a")
                 f.write(f"{str(e)}\n")
                 f.close()
-        print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+        print(f"[INFO] //////////s// BATCH EJECUTADO CORRECTAMENTE ////////////")
     
 
     def get_new_admissions(self, admissions, current_date, days):
