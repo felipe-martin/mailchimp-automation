@@ -291,19 +291,23 @@ class op_functions:
                 audience = pd.DataFrame(audience, columns=["Email"]) # Crear dataframe cambiando nombre a column Email
                 email_list = audience.drop_duplicates(subset="Email") # Eliminar correos duplicados y asignar a variable email_list
 
-                print(email_list)
-
                 for email in email_list:
                     try:
                         data = {
                             "email_address" : email,
                             "status": "subscribed"                        
                         }
+                        # Agregando contactos
                         self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
 
                         # Si se logra agregar a la audiencia se marcara como mail enviado (por ahora)
-                        print(email_iteration)
-                        self.post_mail_journey_monitor(self.ENDPOINT_5, email_iteration["child_service_id"], process_step, email_iteration["current_date"], email_iteration["TIPO"], email_iteration["TAG"])
+                        self.post_mail_journey_monitor(
+                            self.ENDPOINT_5,
+                            email_iteration["child_service_id"],
+                            process_step, email_iteration["current_date"], 
+                            email_iteration["TIPO"], 
+                            email_iteration["TAG"])
+                        
                         print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
 
                     except Exception as e:

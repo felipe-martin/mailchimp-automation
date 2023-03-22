@@ -220,7 +220,6 @@ if __name__ == "__main__":
     # Obteniendo nuevos ingresos para enviar mail de bienvenida
     contacts = fn.get_new_admissions(new_admissions, current_date, threshold_days, campaing_email_code) 
     print("Contactos a cargar: \n", contacts.shape[0])
-
     # Cargando nuevos ingresos en audiencia para activar journey en Mailchimp
     fn.add_members_to_welcome_journey('9b5c022126', contacts)
     print("[INFO] //////////// PROCESO EJECUTADO CORRECTAMENTE 🤘🏻 ////////////")
