@@ -10,6 +10,7 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 date_format = '%d/%m/%Y %H:%M:%S'
+enrollment_date_format = '%Y/%m/%d %H:%M:%S'
 
 
 '-----------------------------------------2. Functions------------------------------------------------'
@@ -94,8 +95,95 @@ class op_functions:
                 f = open("admissions_adaptation_schedulling.txt", "a")
                 f.write(f"{str(e)}\n")
                 f.close()
-        print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+        print(f"[INFO] //////////s// BATCH EJECUTADO CORRECTAMENTE ////////////")
+
+    
+    def post_mail_journey_monitor(self, endpoint_url, dataframe, process_step, process_name):
+        """
+        Posts each row of a Pandas DataFrame as a JSON object to a specified endpoint URL.
         
+        Args:
+        - endpoint_url (str): the URL of the endpoint to which to post the data
+        - df (pandas.DataFrame): the DataFrame containing the rows to post
+        
+        Returns:
+        - None
+        """
+        # Convert each row of the DataFrame to a JSON object and post it to the endpoint
+        for j, row in tqdm(dataframe.iterrows(), "Loading Xano DB mail journey monitor from dataframe:"):
+            item = {"item": {
+                'child_service_id': int(row['child_service_id']),
+                'process_email_step_value': str(process_step),  
+                'process_email_dt': str(row['current_date']),
+                'process_email_name': str(process_name),
+                'process_email_key': str(row['child_service_id']) + "-" + str(process_name),
+                'process_email_tag': str(row['TAG'])
+            }}
+            try:
+                response = requests.post(endpoint_url, json=item)
+                #print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+            except Exception as e:
+                print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
+                f = open("admissions_adaptation_schedulling.txt", "a")
+                f.write(f"{str(e)}\n")
+                f.close()
+        print(f"[INFO] //////////s// BATCH EJECUTADO CORRECTAMENTE ////////////")
+    
+
+    def get_new_admissions(self, admissions, current_date, days):
+    
+        print("[INFO] //////////// GETTING LIST NEW ADMISSIONS TO SEND WELCOME EMAIL 🙈 ////////////")
+
+        columns = [
+        'child_service_id',
+        'child_vitamina_id',
+        'child_name',
+        'child_last_enrollment_dt',
+        'child_educational_guardian_id',
+        'child_financial_guardian_email',
+        'child_educational_guardian_email'
+        ]
+
+        # Lectura de base de datos adaptacion desde Xanodb.
+        #educational_center_admissions = self.read_data_to_dataframe(self.ENDPOINT_3)
+        educational_center_admissions = admissions 
+        # Filtrar columnas
+        educational_center_admissions = educational_center_admissions[columns]
+        # Creacion de columnas de interes
+        educational_center_admissions['child_last_enrollment_dt'] = pd.to_datetime(educational_center_admissions['child_last_enrollment_dt'], format=enrollment_date_format) 
+        educational_center_admissions['date'] = [x.date() for x in educational_center_admissions.child_last_enrollment_dt]
+        educational_center_admissions['current_date'] = current_date
+        educational_center_admissions['days_difference'] = educational_center_admissions['date'] - educational_center_admissions['current_date']
+        educational_center_admissions['days_difference'] = [x.days for x in educational_center_admissions['days_difference']]
+        # Filtro seleccion de audiencia
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['days_difference']==days]
+        
+        # Seleccionar campos necesarios para cargar audiencia
+        columns = [
+            'child_educational_guardian_email',
+            'child_financial_guardian_email',
+        ]
+        educational_center_admissions = educational_center_admissions[columns]
+        audience = []
+
+        # Creacion de array para almacenar los correos a agregar
+        if educational_center_admissions.shape[0]!=0:
+            
+            email_list_1 = educational_center_admissions['child_educational_guardian_email'].to_list() # Lista de correos apoderados
+            email_list_2 = educational_center_admissions['child_financial_guardian_email'].to_list() # Lista de correos apoderado financiero
+            for email in email_list_1:
+                audience.append(email) # Cargar listado de correos en audiencia
+            for email in email_list_2:
+                audience.append(email) # Cargar listado de correos en audiencia
+            
+            audience = pd.DataFrame(audience, columns=["Email"]) # Crear dataframe cambiando nombre a column Email
+            audience = audience.drop_duplicates(subset="Email") # Eliminar correos duplicados
+
+        else:
+            print("[INFO] //////////// EMPTY LIST. NOTHING TO SEND TODAY 🙈 ////////////")
+
+        return audience
+            
     
     def get_contacts(self, current_date, trigger_threshold_days, campaing_email_code):
         columns = [
@@ -221,6 +309,36 @@ class op_functions:
             f.close()
         
         return audience_creation
+    
+
+    #Funcion para agregar miembos a la audiencia
+    def add_members_to_welcome_journey(self, audience_id, mail_list):
+        
+        print("[INFO] //////////////////// ADDING MEMBERS TO AUDIENCE IN MAILCHIMP 🙋🏻‍♀️ > 🐵... ////////////////////")
+        audience_id = audience_id
+        # debe ser un dataframe
+        email_list = mail_list
+
+        if len(email_list)!=0:
+            for i_, email_iteration in email_list.iterrows():
+                try:
+                    data = {
+                        "email_address" : email_iteration['Email'],
+                        "status": "subscribed"                        
+                    }
+                    self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
+                    print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
+
+                except Exception as e:
+                    print("[INFO] IT WASN'T POSSIBLE TO ADD MEMBERS TO AUDIENCE. PLEASE CHECK LOG  🔍")    
+                    f = open("automatizacion_mailchimp_log.txt", "a")
+                    f.write(f'{str(e)}\n')
+                    f.close()
+        else: 
+            print("[INFO] EMPTY LIST. PLEASE CHECK QUERY") 
+            f = open("automatizacion_mailchimp_log.txt", "a")
+            f.write('Nothing to send. Empty list. \n')
+            f.close()
 
 
     #Funcion para agregar miembos a la audiencia
