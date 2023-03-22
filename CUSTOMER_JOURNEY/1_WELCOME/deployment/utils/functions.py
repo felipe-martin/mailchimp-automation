@@ -289,12 +289,13 @@ class op_functions:
                 audience.append(email_iteration['child_financial_guardian_email'])
                 
                 audience = pd.DataFrame(audience, columns=["Email"]) # Crear dataframe cambiando nombre a column Email
-                email_list = audience.drop_duplicates(subset="Email") # Eliminar correos duplicados y asignar a variable email_list
+                audience = audience.drop_duplicates(subset="Email") # Eliminar correos duplicados y asignar a variable email_list
+                
+                for i, email in audience.iterrows():
 
-                for email in email_list:
                     try:
                         data = {
-                            "email_address" : email,
+                            "email_address" : email["Email"],
                             "status": "subscribed"                        
                         }
                         # Agregando contactos
@@ -304,7 +305,8 @@ class op_functions:
                         self.post_mail_journey_monitor(
                             self.ENDPOINT_5,
                             email_iteration["child_service_id"],
-                            process_step, email_iteration["current_date"], 
+                            process_step, 
+                            email_iteration["current_date"], 
                             email_iteration["TIPO"], 
                             email_iteration["TAG"])
                         
