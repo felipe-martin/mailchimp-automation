@@ -1,120 +1,170 @@
 '-----------------------------------------1. Imports------------------------------------------------'
 
 import pandas as pd
-import warnings
-warnings.filterwarnings("ignore")
+import requests, json
 import pyodbc
 import numpy as np
 import holidays
-import time
 from tqdm import tqdm
+import time
+import warnings
+warnings.filterwarnings("ignore")
 date_format = '%d/%m/%Y %H:%M:%S'
+enrollment_date_format = '%Y/%m/%d %H:%M:%S'
 
 
 '-----------------------------------------2. Functions------------------------------------------------'
 
 class op_functions:
 
-    def __init__(self, mailchimp_client, sql_server_conn, dynamodb_resource, dynamodb_client, current_year):
+    def __init__(self, mailchimp_client, sql_server_conn, current_year, endpoint_url_1, endpoint_url_2, endpoint_url_3, endpoint_url_4, endpoint_url_5, endpoint_url_6):
         print("[INFO] //////////////////// MAILCHIMP AUTOMATION MODULE ACTIVE 📧... ////////////////////")
         self.SQL_SERVER_CONN = sql_server_conn
         self.MAILCHIMP_CLIENT = mailchimp_client
-        self.DYNAMODB_CLIENT = dynamodb_client
-        self.DYNAMODB_RESOURCE = dynamodb_resource
+        self.ENDPOINT_1 = endpoint_url_1
+        self.ENDPOINT_2 = endpoint_url_2
+        self.ENDPOINT_3 = endpoint_url_3
+        self.ENDPOINT_4 = endpoint_url_4
+        self.ENDPOINT_5 = endpoint_url_5
+        self.ENDPOINT_6 = endpoint_url_6
         cl_holidays = holidays.country_holidays('CL', years=[current_year, current_year+1])
         self.holiday_dates = []
         for date, occasion in cl_holidays.items():
             self.holiday_dates.append(date)
 
-
-    #Funcion para obtener el listado de email para cargar en audiencia malchimp
-    def get_tag_list(self):
-
-        # query para leer los registros que se deben enviar correo electronico
-        query = """
-            SELECT 
-                EA.Id_Nino_Centro child_service_id,
-                EA.[Email],EA.[TAG],
-                TE.[TPENC_NOMBRE] Tipo
-            FROM [ODS].[dbo].[VW_ODS_Base_Apoderados_Encuesta_Adaptacion_Vigente] EA
-            INNER JOIN [ODS].[dbo].[INTEGRACIONES_ZAPIER_ENC_DT_TIPO_ENCUESTA] TE ON TE.ID_TIPO_ENCUESTA = 13;
-            """
-
-        print("[INFO] //////////////////// GETTING EDUCATIONAL GUARDIAN TAG TO SEND ADAPTATION SURVEY 👨‍👦... ////////////////////")
-        try:
-            tags = pd.read_sql_query(query, self.SQL_SERVER_CONN)
-            tags = tags.drop_duplicates(subset=['Email'])
-            print("[INFO] //////////////////// EDUCATIONAL RESPONSIBLE LIST OK 👨‍👦... ////////////////////")
-            print(tags.head())
-        except Exception as e:
-                print("[INFO] IT WASN'T POSSIBLE TO READ FROM SQL SERVER. PLEASE CHECK LOG 🔍")    
-                f = open("automatizacion_mailchimp_log.txt", "a")
-                f.write(f'{str(e)}\n')
-                f.close()
-        
-        return tags
-
     
-    #Lectura de base de datos registros_evaluacion
-    def scan_dynamodb_table(self, table_name, client):
-        print(f'[INFO] //////////// LECTURA TABLA {table_name} DESDE DYNAMODB ////////////')
+    def read_data_to_dataframe(self, endpoint_url):
+        """
+        Reads data from a specified endpoint URL as JSON and converts it to a Pandas DataFrame.
+        
+        Args:
+        - endpoint_url (str): the URL of the endpoint to read the data from
+        
+        Returns:
+        - pandas.DataFrame: the DataFrame containing the data read from the endpoint
+        """
+        print(f'[INFO] //////////// LECTURA TABLA DESDE XANO USANDO ENDPOINT... ////////////')
         try:
-            #Codigo para escanear tabla registros evaluacion desde dynamodb solo para registros no procesados por RPA
-            response = client.scan(
-                TableName=table_name)
-            #Convertir el resultado de dynamoDB a DataFrame
-            reg_ = pd.json_normalize(response["Items"])
-            #Rename columns droping the dynamo json type (Ex. .S for String)
-            for column in reg_.columns.to_list():
-                reg_.rename(columns={column:column[:-2]}, inplace=True)
-            #print("[INFO] Mostrando 5 primeros registros de evaluacion de la base cargada")
-            #print(self.reg_.head())
-            print(f'[INFO] //////////// LECTURA TABLA {table_name} CORRECTA ////////////')
+            # Make a GET request to the endpoint and get the response as JSON
+            response = requests.get(endpoint_url)
+            json_data = response.json()
+            # Convert the JSON data to a DataFrame
+            df = pd.DataFrame(json_data)
+            print(f'[INFO] //////////// LECTURA TABLA CORRECTA... ////////////')
         except Exception as e:
-            print("[INFO] IT WASN'T POSSIBLE TO READ FROM DYNAMODB. PLEASE CHECK LOG 🔍")    
+            print("[INFO] IT WASN'T POSSIBLE TO READ FROM XANO. PLEASE CHECK LOG... 🔍")    
             f = open("admissions_adaptation_schedulling.txt", "a")
             f.write(f'{str(e)}\n')
             f.close()
-        return reg_
+        return df
     
 
-    def batch_dynamodb_insert(self,table_name, dataframe, batch_size, dynamodb_conn):
+    def post_mail_journey_control(self, endpoint_url, dataframe):
+        """
+        Posts each row of a Pandas DataFrame as a JSON object to a specified endpoint URL.
+        
+        Args:
+        - endpoint_url (str): the URL of the endpoint to which to post the data
+        - df (pandas.DataFrame): the DataFrame containing the rows to post
+        
+        Returns:
+        - None
+        """
+        # Convert each row of the DataFrame to a JSON object and post it to the endpoint
+        for j, row in tqdm(dataframe.iterrows(), "Loading Xano DB from Contacts:"):
+            item = {"item": {
+                'child_service_id': int(row['child_service_id']),
+                'child_adaptation_survey_email_sent_flag': "true",
+                'child_adaptation_survey_email_read_flag': "false",
+                'child_adaptation_survey_completed_flag': "false",
+                'child_adaptation_survey_tag': str(row['TAG']),
+                'child_adaptation_survey_email_sent_dt': str(row['current_date']),
+                'child_welcome_email_sent_flag': "false",
+                'child_welcome_email_read_flag': "false",
+                'child_welcome_email_sent_dt': "",
+                'child_adaptation_scheduling_reminder_email_sent_flag': "false",
+                'child_adaptation_scheduling_reminder_email_read_flag': "false",
+                'child_adaptation_scheduling_reminder_email_dt': "false"
+            }}
+            try:
+                response = requests.post(endpoint_url, json=item)
+                #print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+            except Exception as e:
+                print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
+                f = open("admissions_adaptation_schedulling.txt", "a")
+                f.write(f"{str(e)}\n")
+                f.close()
+        print(f"[INFO] //////////s// BATCH EJECUTADO CORRECTAMENTE ////////////")
 
-        table = dynamodb_conn.Table(table_name)
+    
+    def post_mail_journey_monitor(self, endpoint_url, child_service_id, process_step, current_date, process_name, tag):
+        """
+        Posts each row of a Pandas DataFrame as a JSON object to a specified endpoint URL.
+        
+        Args:
+        - endpoint_url (str): the URL of the endpoint to which to post the data
+        - df (pandas.DataFrame): the DataFrame containing the rows to post
+        
+        Returns:
+        - None
+        """
+        # Convert each row of the DataFrame to a JSON object and post it to the endpoint
+        #for j, row in tqdm(dataframe.iterrows(), "Loading Xano DB mail journey monitor from dataframe:"):
+        item = {"item": {
+            'child_service_id': int(child_service_id),
+            'process_email_step_value': str(process_step),  
+            'process_email_dt': str(current_date),
+            'process_email_name': str(process_name),
+            'process_email_key': str(child_service_id) + "-" + str(process_name),
+            'process_email_tag': str(tag)
+        }}
+        try:
+            response = requests.post(endpoint_url, json=item)
+            #print(f"[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////")
+        except Exception as e:
+            print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
+            f = open("admissions_adaptation_schedulling.txt", "a")
+            f.write(f"{str(e)}\n")
+            f.close()
+        
+        print(f"[INFO] //////////s// BATCH EJECUTADO CORRECTAMENTE ////////////")
 
-        # Define the batch size taking care that the limit is 25
-        batch_size = min(50, batch_size)
+        return response
+    
 
-        # Iterate over the dataframe in chunks of 25 rows
-        for i in tqdm(range(0, len(dataframe), batch_size), desc ="Inserting rows into DynamoDB"):
-            with table.batch_writer() as batch:
-                for j, row in dataframe[i:i + batch_size].iterrows():
-                    item = {
+    def get_new_admissions(self, admissions, current_date, days, campaing_email_code):
+    
+        print("[INFO] //////////// GETTING LIST NEW ADMISSIONS TO SEND WELCOME EMAIL 🙈 ////////////")
 
-                        'child_service_id': int(row['child_service_id']),
-                        'child_adaptation_survey_email_sent_flag': "true",
-                        'child_adaptation_survey_email_read_flag': "false",
-                        'child_adaptation_survey_completed_flag': "false",
-                        'child_adaptation_survey_tag': str(row['TAG']),
-                        'child_adaptation_survey_email_sent_dt': str(row['current_date']),
-                        'child_welcome_email_sent_flag': "false",
-                        'child_welcome_email_read_flag': "false",
-                        'child_welcome_email_sent_dt': "",
-                        'child_adaptation_scheduling_reminder_email_sent_flag': "false",
-                        'child_adaptation_scheduling_reminder_email_read_flag': "false",
-                        'child_adaptation_scheduling_reminder_email_dt': "false"
-                        
-                    }
-                    try:
-                        batch.put_item(Item=item)
-                        time.sleep(0.2)
-                        print(f'[INFO] //////////// BATCH EJECUTADO CORRECTAMENTE ////////////')
-                    except Exception as e:
-                        print("//////////// ERROR EN EJECUCION DE BATCH. REVISAR LOG ////////////")    
-                        f = open("admissions_adaptation_schedulling.txt", "a")
-                        f.write(f'{str(e)}\n')
-                        f.close()
+        columns = [
+        'child_service_id',
+        'child_vitamina_id',
+        'child_name',
+        'child_last_enrollment_dt',
+        'child_educational_guardian_id',
+        'child_financial_guardian_email',
+        'child_educational_guardian_email'
+        ]
 
+        # Lectura de base de datos adaptacion desde Xanodb.
+        #educational_center_admissions = self.read_data_to_dataframe(self.ENDPOINT_3)
+        educational_center_admissions = admissions 
+        # Filtrar columnas
+        educational_center_admissions = educational_center_admissions[columns]
+        # Creacion de columnas de interes
+        educational_center_admissions['child_last_enrollment_dt'] = pd.to_datetime(educational_center_admissions['child_last_enrollment_dt'], format=enrollment_date_format) 
+        educational_center_admissions['date'] = [x.date() for x in educational_center_admissions.child_last_enrollment_dt]
+        educational_center_admissions['current_date'] = current_date
+        educational_center_admissions['days_difference'] = educational_center_admissions['date'] - educational_center_admissions['current_date']
+        educational_center_admissions['days_difference'] = [x.days for x in educational_center_admissions['days_difference']]
+        educational_center_admissions['child_service_id'] = educational_center_admissions['child_service_id'].astype(int)
+        educational_center_admissions['TAG'] = [(str(educational_center_admissions['child_service_id'].iloc[x]) + str(educational_center_admissions['child_vitamina_id'].iloc[x]) + str(educational_center_admissions['child_educational_guardian_id'].iloc[x]) + str(educational_center_admissions['current_date'].iloc[x])).replace("-","") for x in range(educational_center_admissions.shape[0])]
+        educational_center_admissions['TIPO'] = campaing_email_code
+        # Filtro seleccion de audiencia
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['days_difference']==days]
+
+        return educational_center_admissions
+            
     
     def get_contacts(self, current_date, trigger_threshold_days, campaing_email_code):
         columns = [
@@ -131,7 +181,7 @@ class op_functions:
         TRIGGER_THRESHOLD_DAYS = trigger_threshold_days
         
         # Lectura de base de datos adaptacion desde dynamodb.
-        educational_center_admissions = self.scan_dynamodb_table('educational_center_admissions', self.DYNAMODB_CLIENT)
+        educational_center_admissions = self.read_data_to_dataframe(self.ENDPOINT_3)
         # Filtrar columnas
         educational_center_admissions = educational_center_admissions[columns]
         # Filtro para quedarnos solo con adaptaciones agendadas.
@@ -149,46 +199,26 @@ class op_functions:
         educational_center_admissions['send_email_flag'] = np.where(educational_center_admissions['working_days_difference']==TRIGGER_THRESHOLD_DAYS, 'Enviar', 'No enviar')
         
         # Creacion de audiencia utilizando tag
-        #audience = educational_center_admissions.merge(tags, how='left', on='child_service_id')
         print("[INFO] /////////////////// SHOWING GENERATED DATA... ///////////////////")
         print(educational_center_admissions.head())
 
         columns = [
+            'child_service_id',
+            'current_date',
             'child_educational_guardian_email',
             'TAG',
             'TIPO'
         ]
+        # Filtro para tomar aquellos que debemos agregar en la audiencia
         audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar']
-        #Eliminar registros sin correo electronico para seguridad
+        # Eliminar registros sin correo electronico para seguridad
         audience['child_educational_guardian_email'] = np.where(audience['child_educational_guardian_email']=="", np.nan, audience['child_educational_guardian_email'])
+        # Eliminar duplicados
         audience.dropna(subset=['child_educational_guardian_email'], inplace=True)
-        if audience.shape[0] >= 1:
-            #Marcar a los que enviaremos correos
-            print("[INFO] /////////////////// INSERTING DATA TO JOURNEY CONTROL TABLE... ///////////////////")
-            self.batch_dynamodb_insert('child_mail_journey_control',audience, 100, self.DYNAMODB_RESOURCE)
             
         #Seleccionar campos necesarios para cargar audiencia
         audience = audience[columns]
         audience = audience.rename(columns={'child_educational_guardian_email': 'Email' })
-        
-        #Agregar mail de prueba.
-        indicator_light_email = {
-            'Email': 'jaime.arroyo@vitamina.com', 
-            'TAG': '18356794220230206', 
-            'TIPO': campaing_email_code}
-        audience = audience.append(indicator_light_email, ignore_index=True)
-        #Segundo mail de prueba
-        indicator_light_email = {
-            'Email': 'javiera.carter@vitamina.com', 
-            'TAG': '1812312920230206', 
-            'TIPO': campaing_email_code}
-        audience = audience.append(indicator_light_email, ignore_index=True)
-        #Tercer mail de prueba
-        indicator_light_email = {
-            'Email': 'camila.saa@vitamina.com', 
-            'TAG': '1915289320230206', 
-            'TIPO': campaing_email_code}
-        audience = audience.append(indicator_light_email, ignore_index=True)
 
         print("[INFO] /////////////////// SHOWING AUDIENCE TO SEND EMAIL ... ///////////////////")
         print(audience.head())
@@ -240,6 +270,52 @@ class op_functions:
             f.close()
         
         return audience_creation
+    
+
+    #Funcion para agregar miembos a la audiencia
+    def add_members_to_welcome_journey(self, audience_id, contacts):
+        
+        print("[INFO] //////////////////// ADDING MEMBERS TO AUDIENCE IN MAILCHIMP 🙋🏻‍♀️ > 🐵... ////////////////////")
+        audience_id = audience_id
+        process_step = "sent"
+
+        if contacts.shape[0]!=0:
+            for i_, email_iteration in contacts.iterrows():
+                # Obteniendo correos para agregar a la audiencia
+                # Creacion de listados para audiencias
+                audience = []
+                    
+                audience.append(email_iteration['child_educational_guardian_email'])
+                audience.append(email_iteration['child_financial_guardian_email'])
+                
+                audience = pd.DataFrame(audience, columns=["Email"]) # Crear dataframe cambiando nombre a column Email
+                email_list = audience.drop_duplicates(subset="Email") # Eliminar correos duplicados y asignar a variable email_list
+
+                print(email_list)
+
+                for email in email_list:
+                    try:
+                        data = {
+                            "email_address" : email,
+                            "status": "subscribed"                        
+                        }
+                        self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
+
+                        # Si se logra agregar a la audiencia se marcara como mail enviado (por ahora)
+                        print(email_iteration)
+                        self.post_mail_journey_monitor(self.ENDPOINT_5, email_iteration["child_service_id"], process_step, email_iteration["current_date"], email_iteration["TIPO"], email_iteration["TAG"])
+                        print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
+
+                    except Exception as e:
+                        print("[INFO] IT WASN'T POSSIBLE TO ADD MEMBERS TO AUDIENCE. PLEASE CHECK LOG  🔍")    
+                        f = open("automatizacion_mailchimp_log.txt", "a")
+                        f.write(f'{str(e)}\n')
+                        f.close()
+        else: 
+            print("[INFO] EMPTY LIST. PLEASE CHECK QUERY") 
+            f = open("automatizacion_mailchimp_log.txt", "a")
+            f.write('Nothing to send. Empty list. \n')
+            f.close()
 
 
     #Funcion para agregar miembos a la audiencia
@@ -249,6 +325,7 @@ class op_functions:
         audience_id = audience_id
         # debe ser un dataframe
         email_list = mail_list
+        process_step = "sent"
 
         #merging values before to add contacts
 
@@ -284,9 +361,11 @@ class op_functions:
                         }
                             
                     }
+                    # Agregar a audiencia
                     self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
                     print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
-
+                    # Marcar en base de datos
+                    self.post_mail_journey_monitor(self.ENDPOINT_5, email_iteration["child_service_id"], process_step, email_iteration["current_date"], email_iteration["TIPO"], email_iteration["TAG"])
                 except Exception as e:
                     print("[INFO] IT WASN'T POSSIBLE TO ADD MEMBERS TO AUDIENCE. PLEASE CHECK LOG  🔍")    
                     f = open("automatizacion_mailchimp_log.txt", "a")
@@ -335,7 +414,6 @@ class op_functions:
             f.close()
         
         return new_campaign
-
 
 
     #Funcion para enviar mailing

@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print(f"[INFO] //////////////////// THIS EMAIL CONFIGURATION HAS {email_send_flag} SENDING SET 📧... ////////////////////")
 
     # Continuar solo si hay mas de 1 registro en audiencia.
-    if contacts.shape[0] > 3: 
+    if contacts.shape[0] > 0: 
         #Creacion de audiencia
         audience_creation = fn.audience_creation_function(
                                                 audience_creation_dictionary = audience_creation_dictionary)

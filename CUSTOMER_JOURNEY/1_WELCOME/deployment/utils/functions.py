@@ -199,48 +199,26 @@ class op_functions:
         educational_center_admissions['send_email_flag'] = np.where(educational_center_admissions['working_days_difference']==TRIGGER_THRESHOLD_DAYS, 'Enviar', 'No enviar')
         
         # Creacion de audiencia utilizando tag
-        #audience = educational_center_admissions.merge(tags, how='left', on='child_service_id')
         print("[INFO] /////////////////// SHOWING GENERATED DATA... ///////////////////")
         print(educational_center_admissions.head())
 
         columns = [
+            'child_service_id',
+            'current_date',
             'child_educational_guardian_email',
             'TAG',
             'TIPO'
         ]
+        # Filtro para tomar aquellos que debemos agregar en la audiencia
         audience = educational_center_admissions[educational_center_admissions['send_email_flag']=='Enviar']
-        #Eliminar registros sin correo electronico para seguridad
+        # Eliminar registros sin correo electronico para seguridad
         audience['child_educational_guardian_email'] = np.where(audience['child_educational_guardian_email']=="", np.nan, audience['child_educational_guardian_email'])
+        # Eliminar duplicados
         audience.dropna(subset=['child_educational_guardian_email'], inplace=True)
-        if audience.shape[0] >= 1:
-            #Marcar a los que enviaremos correos
-            print("[INFO] /////////////////// INSERTING DATA TO JOURNEY CONTROL TABLE... ///////////////////")
-
-            #Modificar aqui...
-            self.post_mail_journey_control(self.ENDPOINT_5, audience)
             
         #Seleccionar campos necesarios para cargar audiencia
         audience = audience[columns]
         audience = audience.rename(columns={'child_educational_guardian_email': 'Email' })
-        
-        #Agregar mail de prueba.
-        indicator_light_email = {
-            'Email': 'jaime.arroyo@vitamina.com', 
-            'TAG': '18356794220230206', 
-            'TIPO': campaing_email_code}
-        audience = audience.append(indicator_light_email, ignore_index=True)
-        #Segundo mail de prueba
-        indicator_light_email = {
-            'Email': 'javiera.carter@vitamina.com', 
-            'TAG': '1812312920230206', 
-            'TIPO': campaing_email_code}
-        audience = audience.append(indicator_light_email, ignore_index=True)
-        #Tercer mail de prueba
-        indicator_light_email = {
-            'Email': 'camila.saa@vitamina.com', 
-            'TAG': '1915289320230206', 
-            'TIPO': campaing_email_code}
-        audience = audience.append(indicator_light_email, ignore_index=True)
 
         print("[INFO] /////////////////// SHOWING AUDIENCE TO SEND EMAIL ... ///////////////////")
         print(audience.head())
@@ -340,7 +318,6 @@ class op_functions:
             f.close()
 
 
-
     #Funcion para agregar miembos a la audiencia
     def add_members_to_audience_function(self, audience_id, mail_list):
         
@@ -348,6 +325,7 @@ class op_functions:
         audience_id = audience_id
         # debe ser un dataframe
         email_list = mail_list
+        process_step = "sent"
 
         #merging values before to add contacts
 
@@ -383,9 +361,11 @@ class op_functions:
                         }
                             
                     }
+                    # Agregar a audiencia
                     self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
                     print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
-
+                    # Marcar en base de datos
+                    self.post_mail_journey_monitor(self.ENDPOINT_5, email_iteration["child_service_id"], process_step, email_iteration["current_date"], email_iteration["TIPO"], email_iteration["TAG"])
                 except Exception as e:
                     print("[INFO] IT WASN'T POSSIBLE TO ADD MEMBERS TO AUDIENCE. PLEASE CHECK LOG  🔍")    
                     f = open("automatizacion_mailchimp_log.txt", "a")
@@ -434,7 +414,6 @@ class op_functions:
             f.close()
         
         return new_campaign
-
 
 
     #Funcion para enviar mailing
