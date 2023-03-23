@@ -141,10 +141,10 @@ username = "consulta"
 password = "consulta1" 
 
 #endpoint
-educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_educational_center_admissions_bulk"
-adaptation_schedulling_calendar_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_adaptation_schedulling_calendar"
-current_educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_educational_center_admissions"
-monitoring_data_ingestion_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon:v1/_monitoring_data_ingestion"
+educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_educational_center_admissions_bulk"
+adaptation_schedulling_calendar_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_adaptation_schedulling_calendar"
+current_educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_educational_center_admissions"
+monitoring_data_ingestion_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_monitoring_data_ingestion"
 
 
 "-----------------------------------------4. Conexiones------------------------------------------------"
