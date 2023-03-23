@@ -205,3 +205,5 @@ String passed is not a valid email address
 String passed is not a valid email address
 String passed is not a valid email address
 String passed is not a valid email address
+{'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '00cd9011-71ec-63a1-d796-d8fc061b5ebc'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': 'c8d74f74-666b-c76a-1182-742d0c2c511a'}
