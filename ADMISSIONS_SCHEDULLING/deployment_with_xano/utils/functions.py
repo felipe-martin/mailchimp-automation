@@ -197,6 +197,12 @@ class op_functions:
         educational_center_admissions['TAG'] = [(str(educational_center_admissions['child_service_id'].iloc[x]) + str(educational_center_admissions['child_vitamina_id'].iloc[x]) + str(educational_center_admissions['child_educational_guardian_id'].iloc[x]) + str(educational_center_admissions['current_date'].iloc[x])).replace("-","") for x in range(educational_center_admissions.shape[0])]
         educational_center_admissions['TIPO'] = campaing_email_code
         educational_center_admissions['send_email_flag'] = np.where(educational_center_admissions['working_days_difference']==TRIGGER_THRESHOLD_DAYS, 'Enviar', 'No enviar')
+
+        #Modificacion solo para enviar listado actual.
+        #listado = pd.read_excel(r'C:\Users\LMS\Documents\MAILCHIMP_AUTOMATION\ADMISSIONS_SCHEDULLING\listado_a_enviar.xlsx')
+        #listado = listado['child_service_id'].tolist()
+        #educational_center_admissions = educational_center_admissions[educational_center_admissions['child_service_id'].isin(listado)]
+        #educational_center_admissions['send_email_flag'] = 'Enviar'
         
         # Creacion de audiencia utilizando tag
         print("[INFO] /////////////////// SHOWING GENERATED DATA... ///////////////////")
