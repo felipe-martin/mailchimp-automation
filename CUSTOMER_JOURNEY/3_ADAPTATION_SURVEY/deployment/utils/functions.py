@@ -17,7 +17,7 @@ enrollment_date_format = '%Y/%m/%d %H:%M:%S'
 
 class op_functions:
 
-    def __init__(self, mailchimp_client, sql_server_conn, current_year, endpoint_url_1, endpoint_url_2, endpoint_url_3, endpoint_url_4, endpoint_url_5, endpoint_url_6):
+    def __init__(self, mailchimp_client, sql_server_conn, current_year, endpoint_url_1, endpoint_url_2, endpoint_url_3, endpoint_url_4, endpoint_url_5, endpoint_url_6, endpoint_url_7):
         print("[INFO] //////////////////// MAILCHIMP AUTOMATION MODULE ACTIVE 📧... ////////////////////")
         self.SQL_SERVER_CONN = sql_server_conn
         self.MAILCHIMP_CLIENT = mailchimp_client
@@ -27,6 +27,7 @@ class op_functions:
         self.ENDPOINT_4 = endpoint_url_4
         self.ENDPOINT_5 = endpoint_url_5
         self.ENDPOINT_6 = endpoint_url_6
+        self.ENDPOINT_7 = endpoint_url_7
         cl_holidays = holidays.country_holidays('CL', years=[current_year, current_year+1])
         self.holiday_dates = []
         for date, occasion in cl_holidays.items():
@@ -165,7 +166,46 @@ class op_functions:
 
         return educational_center_admissions
             
+
+    def get_end_adaptations(self, current_date, trigger_threshold_days, campaing_email_code):
+        print("[INFO] //////////// GETTING LIST TO SEND ADAPTATION SURVEY 🙈 ////////////")
+
+        columns = [
+        'child_service_id',
+        'child_vitamina_id',
+        'child_name',
+        'child_adaptation_scheduling_end_dt',
+        'child_educational_guardian_id',
+        'child_financial_guardian_email',
+        'child_educational_guardian_email'
+        ]
+
+        # Lectura de base de datos adaptacion desde Xanodb.
+        educational_center_admissions = self.read_data_to_dataframe(self.ENDPOINT_3)
+        # Filtrar columnas
+        educational_center_admissions = educational_center_admissions[columns]
+        # Filtrar solo aquellos que hayan terminado adaptacion
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_scheduling_end_dt'].notnull()]
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_scheduling_end_dt']!='']
+        # Creacion de columnas de interes
+        educational_center_admissions['adaptation_end_date'] = [str(x)[0:10] for x in educational_center_admissions['child_adaptation_scheduling_end_dt']]
+        educational_center_admissions['child_adaptation_scheduling_end_dt'] = pd.to_datetime(educational_center_admissions['child_adaptation_scheduling_end_dt'], format=date_format) 
+        educational_center_admissions['date'] = [x.date() for x in educational_center_admissions.child_adaptation_scheduling_end_dt]
+        educational_center_admissions['current_date'] = current_date
+        educational_center_admissions['days_difference'] = educational_center_admissions['date'] - educational_center_admissions['current_date']
+        educational_center_admissions['days_difference'] = [x.days for x in educational_center_admissions['days_difference']]
+        educational_center_admissions['child_service_id'] = educational_center_admissions['child_service_id'].astype(int)
+        educational_center_admissions['TAG'] = [(str(educational_center_admissions['child_service_id'].iloc[x]) + str(educational_center_admissions['child_vitamina_id'].iloc[x]) + str(educational_center_admissions['child_educational_guardian_id'].iloc[x]) + str(educational_center_admissions['current_date'].iloc[x])).replace("-","") for x in range(educational_center_admissions.shape[0])]
+        educational_center_admissions['TIPO'] = campaing_email_code
     
+        # Filtro seleccion de audiencia
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['days_difference']==trigger_threshold_days]
+        # Renombrar columnas
+        educational_center_admissions.rename(columns={'child_educational_guardian_email':'Email'}, inplace=True)
+
+        return educational_center_admissions
+
+
     def get_contacts(self, current_date, trigger_threshold_days, campaing_email_code):
         columns = [
         'child_service_id',
@@ -375,6 +415,44 @@ class op_functions:
                 except Exception as e:
                     print("[INFO] IT WASN'T POSSIBLE TO ADD MEMBERS TO AUDIENCE. PLEASE CHECK LOG  🔍")    
                     f = open("automatizacion_mailchimp_log.txt", "a")
+                    f.write(f'{str(e)}\n')
+                    f.close()
+        else: 
+            print("[INFO] EMPTY LIST. PLEASE CHECK QUERY") 
+            f = open("automatizacion_mailchimp_log.txt", "a")
+            f.write('Nothing to send. Empty list. \n')
+            f.close()
+
+
+    #Funcion para agregar miembos a la audiencia de journey adaptacion
+    def add_members_to_adaptation_journey(self, audience_id, mail_list):
+        
+        print("[INFO] //////////////////// ADDING MEMBERS TO AUDIENCE IN MAILCHIMP 🙋🏻‍♀️ > 🐵... ////////////////////")
+        audience_id = audience_id
+        # debe ser un dataframe
+        email_list = mail_list
+        process_step = "sent"
+
+        if len(email_list)!=0:
+            for i_, email_iteration in email_list.iterrows():
+                try:
+                    data = {
+                        "email_address" : email_iteration['Email'],
+                        "status": "subscribed",
+                        "merge_fields": {
+                            "TIPO" : email_iteration['TIPO'],
+                            "TAG" : email_iteration['TAG']}
+                            #"ADATE": email_iteration['adaptation_end_date']}
+                            
+                    }
+                    # Agregar a audiencia
+                    self.MAILCHIMP_CLIENT.lists.members.create(list_id=audience_id, data=data)
+                    print('[INFO] {} HAS BEEN SUCCESSFULLY ADDED TO THE {} AUDIENCE'.format(email_iteration, audience_id))
+                    # Marcar en base de datos
+                    self.post_mail_journey_monitor(self.ENDPOINT_5, email_iteration["child_service_id"], process_step, email_iteration["current_date"], email_iteration["TIPO"], email_iteration["TAG"])
+                except Exception as e:
+                    print("[INFO] IT WASN'T POSSIBLE TO ADD MEMBERS TO AUDIENCE. PLEASE CHECK LOG  🔍")    
+                    f = open("adding_audience_log.txt", "a")
                     f.write(f'{str(e)}\n')
                     f.close()
         else: 
