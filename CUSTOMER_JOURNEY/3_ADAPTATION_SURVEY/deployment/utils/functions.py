@@ -175,6 +175,7 @@ class op_functions:
         'child_vitamina_id',
         'child_name',
         'child_adaptation_scheduling_end_dt',
+        'child_adaptation_end_process_dt',
         'child_educational_guardian_id',
         'child_financial_guardian_email',
         'child_educational_guardian_email'
@@ -185,12 +186,13 @@ class op_functions:
         # Filtrar columnas
         educational_center_admissions = educational_center_admissions[columns]
         # Filtrar solo aquellos que hayan terminado adaptacion
-        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_scheduling_end_dt'].notnull()]
-        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_scheduling_end_dt']!='']
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_end_process_dt'].notnull()]
+        educational_center_admissions = educational_center_admissions[educational_center_admissions['child_adaptation_end_process_dt']!='']
         # Creacion de columnas de interes
         educational_center_admissions['adaptation_end_date'] = [str(x)[0:10] for x in educational_center_admissions['child_adaptation_scheduling_end_dt']]
-        educational_center_admissions['child_adaptation_scheduling_end_dt'] = pd.to_datetime(educational_center_admissions['child_adaptation_scheduling_end_dt'], format=date_format) 
-        educational_center_admissions['date'] = [x.date() for x in educational_center_admissions.child_adaptation_scheduling_end_dt]
+        educational_center_admissions['child_adaptation_scheduling_end_dt'] = pd.to_datetime(educational_center_admissions['child_adaptation_scheduling_end_dt'], format=date_format)
+        educational_center_admissions['child_adaptation_end_process_dt'] = pd.to_datetime(educational_center_admissions['child_adaptation_end_process_dt'], format=date_format)
+        educational_center_admissions['date'] = [x.date() for x in educational_center_admissions.child_adaptation_end_process_dt]
         educational_center_admissions['current_date'] = current_date
         educational_center_admissions['days_difference'] = educational_center_admissions['date'] - educational_center_admissions['current_date']
         educational_center_admissions['days_difference'] = [x.days for x in educational_center_admissions['days_difference']]
