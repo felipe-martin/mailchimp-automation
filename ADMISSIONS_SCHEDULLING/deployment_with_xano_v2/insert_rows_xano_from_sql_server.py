@@ -362,6 +362,6 @@ if __name__ == "__main__":
     no_rows = admissions.shape[0]
     #Guardar registro de actualizacion
     response = insert_monitoring_data_ingestion(monitoring_data_ingestion_endpoint, current_date, no_rows)
-    f = open("admissions_adaptation_schedulling.txt", "a")
+    f = open("data_ingestion_log.txt", "a")
     f.write(f"{str(response)}\n")
     f.close()
