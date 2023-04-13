@@ -152,7 +152,7 @@ password = "consulta1"
 educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:Oq7cztlT/v2_educational_center_admissions_bulk"
 adaptation_schedulling_calendar_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_adaptation_schedulling_calendar"
 current_educational_center_admissions_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_educational_center_admissions"
-monitoring_data_ingestion_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:9KDs3Qon/v2_monitoring_data_ingestion"
+monitoring_data_ingestion_endpoint = "https://xmmk-gpob-yjqm.n7.xano.io/api:Oq7cztlT/v2_monitoring_data_ingestion"
 
 
 "-----------------------------------------4. Conexiones------------------------------------------------"
