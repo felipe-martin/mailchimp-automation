@@ -18,3 +18,7 @@ local variable 'response' referenced before assignment
 {'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': 'e15972f1-7fa7-023a-e18b-b3d83e4eea86'}
 {'title': 'Member Exists', 'status': 400, 'detail': 'paola71292@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '9df2242f-306e-cd14-a1b6-0818c918258b'}
 {'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': 'c8990529-d1b0-2ead-1d9c-c3df5110efdc'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '5d99fcf2-183b-c88f-62c6-9de2db9b9967'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '896a1bd9-19e8-f215-3abd-cffb625b02bc'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'britneynavarro74@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '0d2a3151-9e14-6585-07e2-43f0257154c2'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'matgonzaloguzman@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '6502baeb-f21f-34de-8db5-38ea3ea95813'}

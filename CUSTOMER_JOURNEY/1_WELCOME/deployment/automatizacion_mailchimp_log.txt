@@ -234,3 +234,6 @@ Nothing to send. Empty list.
 Nothing to send. Empty list. 
 Nothing to send. Empty list. 
 Nothing to send. Empty list. 
+{'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '28e7499c-7a29-9702-19a9-c13a66f323d2'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'myles.mccarthy@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': 'ee61fefe-bc05-183b-6c19-fa1a63d1a250'}
+{'title': 'Member Exists', 'status': 400, 'detail': 'sincorreo@gmail.com is already a list member. Use PUT to insert or update list members.', 'instance': '3caf1cf2-82c4-a10d-3078-6addb4f984ea'}
