@@ -36,14 +36,15 @@ class Config:
         SQL_SERVER_USERNAME = sql_server_credentials['username']
         SQL_SERVER_PASSWORD = sql_server_credentials['password']
         #Xano
-        ENDPOINT_1 = xano_endpoints["bulk_educational_center_admissions_endpoint"]
-        ENDPOINT_2 = xano_endpoints["adaptation_schedulling_calendar_endpoint"]
-        ENDPOINT_3 = xano_endpoints["current_educational_center_admissions_endpoint"]
-        ENDPOINT_4 = xano_endpoints["monitoring_data_ingestion_endpoint"]
-        ENDPOINT_5 = xano_endpoints["child_mail_journey_control_endpoint"]
-        self.ENDPOINT_6 = xano_endpoints["mailchimp_config_template_endpoint"]
+        ENDPOINT_1 = xano_endpoints["V2_EDUCATIONAL_CENTER_ADMISSIONS_BULK"]
+        ENDPOINT_2 = xano_endpoints["V2_ADAPTATION_SCHEDULLING_CALENDAR"]
+        ENDPOINT_3 = xano_endpoints["V2_EDUCATIONAL_CENTER_ADMISSIONS"]
+        ENDPOINT_4 = xano_endpoints["V2_MONITORING_DATA_INGESTION"]
+        ENDPOINT_5 = xano_endpoints["V2_CHILD_MAIL_JOURNEY_MONITOR"]
+        self.ENDPOINT_6 = xano_endpoints["V2_MAILCHIMP_CONFIG_TEMPLATE"]
+        ENDPOINT_7 = xano_endpoints["_CHILD_INTERVIEW_CALENDAR"]
 
-        return MAILCHIMP_USERNAME, MAILCHIMP_APIKEY, SQL_SERVER, SQL_SERVER_DATABASE, SQL_SERVER_USERNAME, SQL_SERVER_PASSWORD, ENDPOINT_1, ENDPOINT_2, ENDPOINT_3, ENDPOINT_4, ENDPOINT_5, self.ENDPOINT_6
+        return MAILCHIMP_USERNAME, MAILCHIMP_APIKEY, SQL_SERVER, SQL_SERVER_DATABASE, SQL_SERVER_USERNAME, SQL_SERVER_PASSWORD, ENDPOINT_1, ENDPOINT_2, ENDPOINT_3, ENDPOINT_4, ENDPOINT_5, self.ENDPOINT_6, ENDPOINT_7
 
 
     def get_date(self):
